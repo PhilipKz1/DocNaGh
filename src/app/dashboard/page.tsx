@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireProvider } from "@/lib/adminAuth";
 import { signOut } from "@/app/actions/auth";
+import { OnboardingTip } from "./OnboardingTip";
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "Pending",
@@ -43,6 +44,8 @@ export default async function DashboardPage() {
           </form>
         </div>
       </div>
+
+      <OnboardingTip />
 
       {(!requests || requests.length === 0) && (
         <p className="text-sm text-gray-500">No requests yet. Create one to get started.</p>

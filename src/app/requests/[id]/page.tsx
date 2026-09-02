@@ -5,6 +5,7 @@ import { DownloadButton } from "./DownloadButton";
 import { DeleteDocumentButton } from "./DeleteDocumentButton";
 import { RequestQrCode } from "./RequestQrCode";
 import { CancelRequestButton } from "./CancelRequestButton";
+import { RequestMoreDocumentsForm } from "./RequestMoreDocumentsForm";
 
 const STATUS_LABEL: Record<string, string> = {
   requested: "Requested",
@@ -18,7 +19,9 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
 
   const { data: request } = await supabase
     .from("requests")
-    .select("id, patient_display_name, status, access_token, expires_at, created_at")
+    .select(
+      "id, patient_display_name, status, access_token, expires_at, created_at, patients(email)"
+    )
     .eq("id", id)
     .single();
 
@@ -96,6 +99,8 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
           ))}
         </ul>
       </div>
+
+      <RequestMoreDocumentsForm requestId={request.id} defaultEmail={request.patients?.email ?? ""} />
 
       <div className="space-y-3">
         <h2 className="text-sm font-semibold text-gray-700">Audit history</h2>

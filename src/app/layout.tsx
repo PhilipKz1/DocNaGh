@@ -18,6 +18,16 @@ export const metadata: Metadata = {
   description: "Provider-initiated healthcare document requests",
 };
 
+/**
+ * Forces every page to render per-request instead of being statically
+ * cached at build time. Required for the CSP nonce in src/middleware.ts to
+ * actually reach Next's inline hydration scripts - a statically prerendered
+ * page's HTML is fixed at build time and can't carry a fresh per-request
+ * nonce, which would leave those scripts nonce-less and silently blocked by
+ * the browser under a strict script-src.
+ */
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({
   children,
 }: Readonly<{

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { logAuditEvent } from "@/lib/audit";
+import { sendEmail, renderBrandedEmail, escapeHtml } from "@/lib/email";
 
 const LINK_TTL_HOURS = Number(process.env.DOCUMENT_REQUEST_LINK_TTL_HOURS ?? 72);
 
@@ -123,6 +124,64 @@ export async function cancelRequest(requestId: string) {
     actorType: "provider",
     actorId: provider.id,
     eventType: "request_cancelled",
+  });
+
+  revalidatePath(`/requests/${requestId}`);
+  return { error: null };
+}
+
+/**
+ * Emails the patient a message the provider writes themselves - e.g. what's
+ * been sent so far isn't enough and something specific is still needed.
+ * RLS on `requests` here (the session-bound client, not service role)
+ * already scopes this to the caller's own clinic, so a requestId for
+ * another clinic just matches zero rows below.
+ */
+export async function requestAdditionalDocuments(
+  requestId: string,
+  patientEmail: string,
+  message: string
+) {
+  const supabase = await createClient();
+  const provider = await getCurrentProvider(supabase);
+
+  const trimmedEmail = patientEmail.trim();
+  const trimmedMessage = message.trim();
+  if (!trimmedEmail) return { error: "Patient email is required" };
+  if (!trimmedMessage) return { error: "Add a message describing what's needed" };
+
+  const { data: request, error } = await supabase
+    .from("requests")
+    .select("id, patient_display_name, access_token")
+    .eq("id", requestId)
+    .single();
+  if (error || !request) return { error: "Request not found" };
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const link = `${appUrl}/r/${request.access_token}`;
+
+  const bodyHtml = `
+    <p>Hi ${escapeHtml(request.patient_display_name)},</p>
+    <p>${escapeHtml(trimmedMessage).replace(/\n/g, "<br />")}</p>
+  `;
+
+  await sendEmail({
+    to: trimmedEmail,
+    subject: `Additional documents needed - ${request.patient_display_name}`,
+    html: renderBrandedEmail({
+      heading: "A few more documents are needed",
+      bodyHtml,
+      ctaText: "Upload documents",
+      ctaUrl: link,
+    }),
+  });
+
+  await logAuditEvent(supabase, {
+    requestId,
+    actorType: "provider",
+    actorId: provider.id,
+    eventType: "additional_documents_requested",
+    metadata: { patientEmail: trimmedEmail },
   });
 
   revalidatePath(`/requests/${requestId}`);
