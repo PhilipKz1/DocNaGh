@@ -45,3 +45,22 @@ export async function signOut() {
   await supabase.auth.signOut();
   redirect("/login");
 }
+
+/**
+ * Runs server-side (unlike the browser client) so a failed send - bad SMTP
+ * credentials, Supabase/Resend outage, etc. - shows up in Vercel's runtime
+ * logs instead of only a visitor's browser console. Always reports success
+ * to the caller regardless of outcome, so this can't be used to test which
+ * emails have an account.
+ */
+export async function requestPasswordReset(email: string) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${appUrl}/reset-password?next=/dashboard`,
+  });
+  if (error) {
+    console.error(`[requestPasswordReset] failed for ${email}: ${error.message}`);
+  }
+  return { ok: true };
+}

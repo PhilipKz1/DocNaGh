@@ -27,7 +27,10 @@ export async function createClinic(_prevState: { error: string | null }, formDat
     adminEmail,
     { redirectTo: `${appUrl}/reset-password?next=/dashboard` }
   );
-  if (inviteError) return { error: inviteError.message };
+  if (inviteError) {
+    console.error(`[createClinic] invite failed for ${adminEmail}: ${inviteError.message}`);
+    return { error: inviteError.message };
+  }
 
   const { data: clinic, error: clinicError } = await supabase
     .from("clinics")

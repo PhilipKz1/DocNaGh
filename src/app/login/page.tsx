@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
-import { signIn } from "@/app/actions/auth";
-import { createClient } from "@/lib/supabase/client";
+import { signIn, requestPasswordReset } from "@/app/actions/auth";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -31,15 +30,7 @@ export default function LoginPage() {
       return;
     }
     setForgotStatus("sending");
-    const supabase = createClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password?next=/dashboard`,
-    });
-    if (error) {
-      console.error("resetPasswordForEmail failed:", error.message);
-    }
-    // Always show the same generic message regardless of outcome, so this
-    // can't be used to test which emails have an account.
+    await requestPasswordReset(email);
     setForgotStatus("sent");
   }
 

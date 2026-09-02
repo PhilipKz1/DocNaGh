@@ -23,7 +23,10 @@ export async function inviteProvider(_prevState: { error: string | null }, formD
     email,
     { redirectTo: `${appUrl}/reset-password?next=/dashboard` }
   );
-  if (inviteError) return { error: inviteError.message };
+  if (inviteError) {
+    console.error(`[inviteProvider] invite failed for ${email}: ${inviteError.message}`);
+    return { error: inviteError.message };
+  }
 
   const { error: providerError } = await serviceClient.from("providers").insert({
     clinic_id: admin.clinic_id,
