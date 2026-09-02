@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getAppUrl } from "@/lib/appUrl";
 
 export async function signIn(_prevState: { error: string | null }, formData: FormData) {
   const email = String(formData.get("email") ?? "");
@@ -54,7 +55,14 @@ export async function signOut() {
  * emails have an account.
  */
 export async function requestPasswordReset(email: string) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  let appUrl: string;
+  try {
+    appUrl = getAppUrl();
+  } catch (err) {
+    console.error(err);
+    return { ok: true };
+  }
+
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${appUrl}/reset-password?next=/dashboard`,

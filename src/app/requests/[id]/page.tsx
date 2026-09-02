@@ -6,6 +6,7 @@ import { DeleteDocumentButton } from "./DeleteDocumentButton";
 import { RequestQrCode } from "./RequestQrCode";
 import { CancelRequestButton } from "./CancelRequestButton";
 import { RequestMoreDocumentsForm } from "./RequestMoreDocumentsForm";
+import { getAppUrl } from "@/lib/appUrl";
 
 const STATUS_LABEL: Record<string, string> = {
   requested: "Requested",
@@ -40,8 +41,7 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
     .order("created_at", { ascending: false })
     .limit(20);
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const link = `${appUrl}/r/${request.access_token}`;
+  const link = `${getAppUrl()}/r/${request.access_token}`;
   const isCancellable = request.status === "pending" || request.status === "partially_received";
   const linkIsLive = isCancellable && new Date(request.expires_at).getTime() > Date.now();
 

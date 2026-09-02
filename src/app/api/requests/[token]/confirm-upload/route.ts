@@ -8,8 +8,7 @@ import { sendEmail } from "@/lib/email";
 import { getDocumentStorageService } from "@/lib/storage";
 import { validateFile, type AllowedMimeType } from "@/lib/storage/fileValidation";
 import { matchesFileSignature, SIGNATURE_CHECK_BYTES } from "@/lib/storage/fileSignature";
-
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+import { getAppUrl } from "@/lib/appUrl";
 
 export async function POST(request: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -127,13 +126,20 @@ async function notifyUploadReceived(params: {
   const sends: Promise<void>[] = [];
 
   if (provider?.email) {
-    sends.push(
-      sendEmail({
-        to: provider.email,
-        subject: `New document received: ${patientDisplayName}`,
-        html: `<p><strong>${documentLabel}</strong> was just uploaded for ${patientDisplayName}'s document request.</p><p><a href="${appUrl}/requests/${requestId}">View in dashboard</a></p>`,
-      })
-    );
+    try {
+      const appUrl = getAppUrl();
+      sends.push(
+        sendEmail({
+          to: provider.email,
+          subject: `New document received: ${patientDisplayName}`,
+          html: `<p><strong>${documentLabel}</strong> was just uploaded for ${patientDisplayName}'s document request.</p><p><a href="${appUrl}/requests/${requestId}">View in dashboard</a></p>`,
+        })
+      );
+    } catch (err) {
+      // Misconfigured app URL shouldn't fail the upload it's reporting on -
+      // just skip this notification and make the misconfiguration loud.
+      console.error(err);
+    }
   }
 
   if (patientEmail) {

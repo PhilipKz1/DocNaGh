@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { logAuditEvent } from "@/lib/audit";
 import { sendEmail, renderBrandedEmail, escapeHtml } from "@/lib/email";
+import { getAppUrl } from "@/lib/appUrl";
 
 const LINK_TTL_HOURS = Number(process.env.DOCUMENT_REQUEST_LINK_TTL_HOURS ?? 72);
 
@@ -157,7 +158,13 @@ export async function requestAdditionalDocuments(
     .single();
   if (error || !request) return { error: "Request not found" };
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  let appUrl: string;
+  try {
+    appUrl = getAppUrl();
+  } catch (err) {
+    console.error(err);
+    return { error: "Server misconfiguration: the app's URL isn't set correctly. Contact support." };
+  }
   const link = `${appUrl}/r/${request.access_token}`;
 
   const bodyHtml = `

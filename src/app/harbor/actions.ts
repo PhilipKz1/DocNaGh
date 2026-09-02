@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requirePlatformAdmin } from "@/lib/adminAuth";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { getDocumentStorageService } from "@/lib/storage";
+import { getAppUrl } from "@/lib/appUrl";
 
 /**
  * Onboards a clinic and its first admin. We never set or see the admin's
@@ -22,8 +23,15 @@ export async function createClinic(_prevState: { error: string | null }, formDat
   if (!adminName) return { error: "Admin name is required" };
   if (!adminEmail) return { error: "Admin email is required" };
 
+  let appUrl: string;
+  try {
+    appUrl = getAppUrl();
+  } catch (err) {
+    console.error(err);
+    return { error: "Server misconfiguration: the app's URL isn't set correctly. Contact support before inviting anyone." };
+  }
+
   const supabase = createServiceRoleClient();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
   const { data: invited, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
     adminEmail,
@@ -161,8 +169,15 @@ export async function deleteClinic(clinicId: string) {
 export async function resendClinicInvite(clinicId: string) {
   await requirePlatformAdmin();
 
+  let appUrl: string;
+  try {
+    appUrl = getAppUrl();
+  } catch (err) {
+    console.error(err);
+    return { error: "Server misconfiguration: the app's URL isn't set correctly. Contact support." };
+  }
+
   const supabase = createServiceRoleClient();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
   const { data: admins } = await supabase
     .from("providers")

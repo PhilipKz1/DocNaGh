@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireClinicAdmin } from "@/lib/adminAuth";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { logAuditEvent } from "@/lib/audit";
+import { getAppUrl } from "@/lib/appUrl";
 
 export async function inviteProvider(_prevState: { error: string | null }, formData: FormData) {
   const { supabase, provider: admin } = await requireClinicAdmin();
@@ -16,8 +17,15 @@ export async function inviteProvider(_prevState: { error: string | null }, formD
   if (!email) return { error: "Email is required" };
   if (role !== "admin" && role !== "staff") return { error: "Invalid role" };
 
+  let appUrl: string;
+  try {
+    appUrl = getAppUrl();
+  } catch (err) {
+    console.error(err);
+    return { error: "Server misconfiguration: the app's URL isn't set correctly. Contact support before inviting anyone." };
+  }
+
   const serviceClient = createServiceRoleClient();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
   const { data: invited, error: inviteError } = await serviceClient.auth.admin.inviteUserByEmail(
     email,
@@ -66,7 +74,14 @@ export async function resendInvite(providerId: string) {
     .maybeSingle();
   if (!teammate) return { error: "Teammate not found" };
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  let appUrl: string;
+  try {
+    appUrl = getAppUrl();
+  } catch (err) {
+    console.error(err);
+    return { error: "Server misconfiguration: the app's URL isn't set correctly. Contact support." };
+  }
+
   const { error: inviteError } = await serviceClient.auth.admin.inviteUserByEmail(
     teammate.email,
     { redirectTo: `${appUrl}/reset-password?next=/dashboard` }
