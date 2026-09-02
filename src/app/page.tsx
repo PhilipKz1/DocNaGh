@@ -104,9 +104,17 @@ export default function Home() {
             </span>
             Healthcare Document Exchange
           </span>
-          <span className="rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-medium text-slate-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-400">
-            Beta coming soon
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-medium text-slate-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-400">
+              Beta coming soon
+            </span>
+            <a
+              href="/login"
+              className="rounded-md bg-teal-600 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-teal-700"
+            >
+              Log in
+            </a>
+          </div>
         </div>
       </header>
 
