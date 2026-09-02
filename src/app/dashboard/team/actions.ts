@@ -48,6 +48,37 @@ export async function inviteProvider(_prevState: { error: string | null }, formD
   return { error: null };
 }
 
+/**
+ * Re-sends the invite email to a teammate who hasn't accepted yet (or
+ * whose link broke, e.g. sent before NEXT_PUBLIC_APP_URL was configured
+ * correctly). Supabase itself rejects this harmlessly (an "already
+ * registered" error) if they already have an account.
+ */
+export async function resendInvite(providerId: string) {
+  const { provider: admin } = await requireClinicAdmin();
+  const serviceClient = createServiceRoleClient();
+
+  const { data: teammate } = await serviceClient
+    .from("providers")
+    .select("email")
+    .eq("id", providerId)
+    .eq("clinic_id", admin.clinic_id)
+    .maybeSingle();
+  if (!teammate) return { error: "Teammate not found" };
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const { error: inviteError } = await serviceClient.auth.admin.inviteUserByEmail(
+    teammate.email,
+    { redirectTo: `${appUrl}/reset-password?next=/dashboard` }
+  );
+  if (inviteError) {
+    console.error(`[resendInvite] failed for ${teammate.email}: ${inviteError.message}`);
+    return { error: inviteError.message };
+  }
+
+  return { error: null };
+}
+
 export async function removeProvider(providerId: string) {
   const { supabase, provider: admin } = await requireClinicAdmin();
 

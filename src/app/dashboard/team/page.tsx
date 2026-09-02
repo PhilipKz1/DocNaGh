@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireClinicAdmin } from "@/lib/adminAuth";
 import { InviteProviderForm } from "./InviteProviderForm";
 import { RemoveProviderButton } from "./RemoveProviderButton";
+import { ResendInviteButton } from "./ResendInviteButton";
 
 export default async function TeamPage() {
   const { supabase, provider: admin } = await requireClinicAdmin();
@@ -32,7 +33,12 @@ export default async function TeamPage() {
                   {teammate.email} · {teammate.role}
                 </p>
               </div>
-              {teammate.id !== admin.id && <RemoveProviderButton providerId={teammate.id} />}
+              {teammate.id !== admin.id && (
+                <div className="flex items-center gap-4">
+                  <ResendInviteButton providerId={teammate.id} />
+                  <RemoveProviderButton providerId={teammate.id} />
+                </div>
+              )}
             </li>
           ))}
         </ul>

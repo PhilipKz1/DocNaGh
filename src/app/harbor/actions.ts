@@ -151,3 +151,38 @@ export async function deleteClinic(clinicId: string) {
   revalidatePath("/harbor");
   return { error: null };
 }
+
+/**
+ * Re-sends the invite email to a clinic's admin(s) - e.g. the original
+ * link was sent before NEXT_PUBLIC_APP_URL was configured correctly, or
+ * simply expired. Supabase itself rejects this harmlessly (an
+ * "already registered" error) if the invite was already accepted.
+ */
+export async function resendClinicInvite(clinicId: string) {
+  await requirePlatformAdmin();
+
+  const supabase = createServiceRoleClient();
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
+  const { data: admins } = await supabase
+    .from("providers")
+    .select("email")
+    .eq("clinic_id", clinicId)
+    .eq("role", "admin");
+
+  if (!admins || admins.length === 0) return { error: "No admin found for this clinic" };
+
+  const failed: string[] = [];
+  for (const admin of admins) {
+    const { error } = await supabase.auth.admin.inviteUserByEmail(admin.email, {
+      redirectTo: `${appUrl}/reset-password?next=/dashboard`,
+    });
+    if (error) {
+      console.error(`[resendClinicInvite] failed for ${admin.email}: ${error.message}`);
+      failed.push(admin.email);
+    }
+  }
+
+  if (failed.length > 0) return { error: `Failed to resend for: ${failed.join(", ")}` };
+  return { error: null };
+}

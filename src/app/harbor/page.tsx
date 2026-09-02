@@ -4,6 +4,7 @@ import { createServiceRoleClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/actions/auth";
 import { CreateClinicForm } from "./CreateClinicForm";
 import { DeleteClinicButton } from "./DeleteClinicButton";
+import { ResendInviteButton } from "./ResendInviteButton";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -44,7 +45,10 @@ export default async function AdminPage() {
                     {clinic.providers.length} provider(s)
                   </span>
                 </div>
-                <DeleteClinicButton clinicId={clinic.id} clinicName={clinic.name} />
+                <div className="flex items-center gap-4">
+                  <ResendInviteButton clinicId={clinic.id} />
+                  <DeleteClinicButton clinicId={clinic.id} clinicName={clinic.name} />
+                </div>
               </li>
             ))}
             {(!clinics || clinics.length === 0) && (
