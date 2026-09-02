@@ -13,7 +13,7 @@ export async function signIn(_prevState: { error: string | null }, formData: For
 
   const { data: isPlatformAdmin } = await supabase.rpc("is_platform_admin");
 
-  let target = "/admin";
+  let target = "/harbor";
   if (!isPlatformAdmin) {
     const {
       data: { user },

@@ -3,8 +3,9 @@ import { NextResponse, type NextRequest } from "next/server";
 
 /**
  * Refreshes the Supabase auth session on every provider-facing request and
- * gates access: /admin needs platform-admin membership, /dashboard and
- * /requests need any signed-in provider, /account just needs a session.
+ * gates access: /harbor (platform admin) needs platform-admin membership,
+ * /dashboard and /requests need any signed-in provider, /account just needs
+ * a session.
  * Patient upload routes (/r/*) are token-authenticated and bypass this
  * entirely - they're not in the matcher below.
  */
@@ -35,7 +36,7 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const isAdminRoute = pathname.startsWith("/admin");
+  const isAdminRoute = pathname.startsWith("/harbor");
   const isProviderRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/requests");
   const isAccountRoute = pathname.startsWith("/account");
   const needsAuth = isAdminRoute || isProviderRoute || isAccountRoute;
@@ -66,5 +67,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/requests/:path*", "/admin/:path*", "/account/:path*"],
+  matcher: ["/dashboard/:path*", "/requests/:path*", "/harbor/:path*", "/account/:path*"],
 };

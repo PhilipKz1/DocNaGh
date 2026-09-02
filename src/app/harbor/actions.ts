@@ -56,7 +56,7 @@ export async function createClinic(_prevState: { error: string | null }, formDat
     metadata: { clinicName, adminEmail },
   });
 
-  redirect("/admin");
+  redirect("/harbor");
 }
 
 /**
@@ -148,6 +148,6 @@ export async function deleteClinic(clinicId: string) {
     metadata: { clinicId, clinicName: clinic.name },
   });
 
-  revalidatePath("/admin");
+  revalidatePath("/harbor");
   return { error: null };
 }

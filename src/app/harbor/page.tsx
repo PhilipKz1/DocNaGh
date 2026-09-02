@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import { requirePlatformAdmin } from "@/lib/adminAuth";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/actions/auth";
 import { CreateClinicForm } from "./CreateClinicForm";
 import { DeleteClinicButton } from "./DeleteClinicButton";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default async function AdminPage() {
   await requirePlatformAdmin();
