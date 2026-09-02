@@ -23,11 +23,11 @@ export default function LoginPage() {
     error: null,
   });
   const [email, setEmail] = useState("");
-  const [forgotStatus, setForgotStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [forgotStatus, setForgotStatus] = useState<"idle" | "sending" | "sent" | "no-email">("idle");
 
   async function handleForgotPassword() {
     if (!email) {
-      setForgotStatus("error");
+      setForgotStatus("no-email");
       return;
     }
     setForgotStatus("sending");
@@ -35,9 +35,12 @@ export default function LoginPage() {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password?next=/dashboard`,
     });
-    // Always report success even on error, so this can't be used to test
-    // which emails have an account.
-    setForgotStatus(error ? "error" : "sent");
+    if (error) {
+      console.error("resetPasswordForEmail failed:", error.message);
+    }
+    // Always show the same generic message regardless of outcome, so this
+    // can't be used to test which emails have an account.
+    setForgotStatus("sent");
   }
 
   return (
@@ -107,7 +110,7 @@ export default function LoginPage() {
               {forgotStatus === "sending" ? "Sending…" : "Forgot password?"}
             </button>
           )}
-          {forgotStatus === "error" && !email && (
+          {forgotStatus === "no-email" && (
             <p className="text-red-600 mt-1 dark:text-red-400">Enter your email above first.</p>
           )}
         </div>
