@@ -7,6 +7,7 @@ import { logAuditEvent } from "@/lib/audit";
 import { sendEmail, renderBrandedEmail, escapeHtml } from "@/lib/email";
 import { getAppUrl } from "@/lib/appUrl";
 import { recomputeRequestStatus } from "@/lib/requestStatus";
+import { MAX_REQUEST_LIFETIME_DAYS } from "@/lib/requestLimits";
 
 const LINK_TTL_HOURS = Number(process.env.DOCUMENT_REQUEST_LINK_TTL_HOURS ?? 72);
 
@@ -210,7 +211,6 @@ export async function markRequestComplete(requestId: string) {
   return { error: null };
 }
 
-const MAX_REQUEST_LIFETIME_DAYS = 14;
 
 /**
  * Pushes a request's expiry further out - e.g. a patient needs more time

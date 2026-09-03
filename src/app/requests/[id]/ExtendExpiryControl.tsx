@@ -4,8 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { extendRequestExpiry } from "@/app/actions/requests";
 import { InfoTooltip } from "@/components/InfoTooltip";
-
-const MAX_LIFETIME_DAYS = 14;
+import { MAX_REQUEST_LIFETIME_DAYS as MAX_LIFETIME_DAYS } from "@/lib/requestLimits";
 
 function toDateInputValue(date: Date) {
   return date.toISOString().slice(0, 10);
