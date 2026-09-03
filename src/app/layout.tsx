@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import localFont from "next/font/local";
 import "./globals.css";
-import { AuthHashRedirect } from "./AuthHashRedirect";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -29,17 +29,39 @@ export const metadata: Metadata = {
  */
 export const dynamic = "force-dynamic";
 
-export default function RootLayout({
+/**
+ * Supabase resolves an invite/recovery redirect against its own Site URL /
+ * Redirect URLs config at send time, and any mismatch there can dump the
+ * session token on the wrong page instead of /reset-password. This catches
+ * that and forwards it - as an inline script in <head> rather than a React
+ * effect, so it runs before the page paints anything instead of after a
+ * full hydration cycle (which would flash the wrong page first).
+ */
+const authHashRedirectScript = `(function(){
+  var h = window.location.hash;
+  if (!h || window.location.pathname === "/reset-password") return;
+  var p = new URLSearchParams(h.slice(1));
+  var t = p.get("type");
+  if (p.get("access_token") && (t === "invite" || t === "recovery")) {
+    window.location.replace("/reset-password?next=/dashboard" + h);
+  }
+})();`;
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   return (
     <html lang="en">
+      <head>
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: authHashRedirectScript }} />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthHashRedirect />
         {children}
       </body>
     </html>
