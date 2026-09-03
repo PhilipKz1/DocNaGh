@@ -4,7 +4,7 @@ import type { Database } from "@/lib/supabase/database.types";
 import { getRequestByToken } from "@/lib/requestAccess";
 import { logAuditEvent } from "@/lib/audit";
 import { recomputeRequestStatus } from "@/lib/requestStatus";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, renderBrandedEmail, escapeHtml } from "@/lib/email";
 import { getDocumentStorageService } from "@/lib/storage";
 import { validateFile, type AllowedMimeType } from "@/lib/storage/fileValidation";
 import { matchesFileSignature, SIGNATURE_CHECK_BYTES } from "@/lib/storage/fileSignature";
@@ -81,6 +81,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
   await notifyUploadReceived({
     supabase: access.supabase,
     requestId: access.request.id,
+    clinicId: access.request.clinic_id,
     providerId: access.request.provider_id,
     patientId: access.request.patient_id,
     patientDisplayName: access.request.patient_display_name,
@@ -100,18 +101,20 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
 async function notifyUploadReceived(params: {
   supabase: SupabaseClient<Database>;
   requestId: string;
+  clinicId: string;
   providerId: string;
   patientId: string | null;
   patientDisplayName: string;
   documentLabel: string;
 }) {
-  const { supabase, requestId, providerId, patientId, patientDisplayName, documentLabel } = params;
+  const { supabase, requestId, clinicId, providerId, patientId, patientDisplayName, documentLabel } =
+    params;
 
-  const { data: provider } = await supabase
-    .from("providers")
-    .select("email")
-    .eq("id", providerId)
-    .maybeSingle();
+  const [{ data: provider }, { data: clinic }] = await Promise.all([
+    supabase.from("providers").select("email").eq("id", providerId).maybeSingle(),
+    supabase.from("clinics").select("name").eq("id", clinicId).maybeSingle(),
+  ]);
+  const clinicName = clinic?.name ?? "your clinic";
 
   let patientEmail: string | null = null;
   if (patientId) {
@@ -132,7 +135,7 @@ async function notifyUploadReceived(params: {
         sendEmail({
           to: provider.email,
           subject: `New document received: ${patientDisplayName}`,
-          html: `<p><strong>${documentLabel}</strong> was just uploaded for ${patientDisplayName}'s document request.</p><p><a href="${appUrl}/requests/${requestId}">View in dashboard</a></p>`,
+          html: `<p><strong>${escapeHtml(documentLabel)}</strong> was just uploaded for ${escapeHtml(patientDisplayName)}'s document request.</p><p><a href="${appUrl}/requests/${requestId}">View in dashboard</a></p>`,
         })
       );
     } catch (err) {
@@ -146,8 +149,19 @@ async function notifyUploadReceived(params: {
     sends.push(
       sendEmail({
         to: patientEmail,
-        subject: "Document received",
-        html: `<p>We received your <strong>${documentLabel}</strong>. Thanks for sending it over.</p>`,
+        subject: `Document received - ${clinicName}`,
+        html: renderBrandedEmail({
+          heading: "We received your document",
+          bodyHtml: `
+            <p>Hi ${escapeHtml(patientDisplayName)},</p>
+            <p><strong>${escapeHtml(documentLabel)}</strong> was received by ${escapeHtml(clinicName)}. Thank you for sending it over.</p>
+            <p style="margin-top:16px;color:#94a3b8;font-size:12px;">
+              This is an automated message and this inbox isn't monitored - please don't reply
+              directly. If you have questions, contact ${escapeHtml(clinicName)} directly.
+            </p>
+            <p style="margin-top:16px;">Kind regards,<br />${escapeHtml(clinicName)}</p>
+          `,
+        }),
       })
     );
   }

@@ -24,6 +24,8 @@ export default function NewRequestPage() {
     error: null,
   });
   const [labels, setLabels] = useState([""]);
+  const [patientEmail, setPatientEmail] = useState("");
+  const [sendEmailNow, setSendEmailNow] = useState(true);
 
   return (
     <div className="min-h-screen bg-[var(--background)] text-slate-900">
@@ -69,9 +71,30 @@ export default function NewRequestPage() {
                 id="patientEmail"
                 name="patientEmail"
                 type="email"
+                value={patientEmail}
+                onChange={(e) => setPatientEmail(e.target.value)}
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-600"
               />
             </div>
+          </div>
+
+          <div className="space-y-1.5 rounded-md bg-slate-50 p-3">
+            <label className={`flex items-start gap-2 text-sm ${patientEmail ? "text-slate-700" : "text-slate-400"}`}>
+              <input
+                type="checkbox"
+                name="sendEmailNow"
+                checked={sendEmailNow && !!patientEmail}
+                disabled={!patientEmail}
+                onChange={(e) => setSendEmailNow(e.target.checked)}
+                className="mt-0.5"
+              />
+              Email the patient this link right away
+            </label>
+            <p className="text-xs text-slate-400">
+              {patientEmail
+                ? "Sent as soon as you create the request."
+                : "Add an email above to enable this, or skip it and share the QR code, link, or WhatsApp from the request page after creating it."}
+            </p>
           </div>
 
           <div className="space-y-2">

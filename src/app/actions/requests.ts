@@ -29,6 +29,7 @@ export async function createRequest(_prevState: { error: string | null }, formDa
   const patientName = String(formData.get("patientName") ?? "").trim();
   const patientPhone = String(formData.get("patientPhone") ?? "").trim() || null;
   const patientEmail = String(formData.get("patientEmail") ?? "").trim() || null;
+  const sendEmailNow = formData.get("sendEmailNow") === "on";
   const labels = formData
     .getAll("documentLabel")
     .map((v) => String(v).trim())
@@ -78,7 +79,7 @@ export async function createRequest(_prevState: { error: string | null }, formDa
       patient_display_name: patientName,
       expires_at: expiresAt,
     })
-    .select("id")
+    .select("id, access_token")
     .single();
 
   if (requestError) return { error: requestError.message };
@@ -96,6 +97,50 @@ export async function createRequest(_prevState: { error: string | null }, formDa
     eventType: "request_created",
     metadata: { documentCount: labels.length },
   });
+
+  if (sendEmailNow && patientEmail) {
+    const { data: clinic } = await supabase
+      .from("clinics")
+      .select("name")
+      .eq("id", provider.clinic_id)
+      .maybeSingle();
+    const clinicName = clinic?.name ?? "your clinic";
+
+    try {
+      const link = `${getAppUrl()}/r/${request.access_token}`;
+      const itemsHtml = labels.map((label) => `<li>${escapeHtml(label)}</li>`).join("");
+      await sendEmail({
+        to: patientEmail,
+        subject: `Document request from ${clinicName}`,
+        html: renderBrandedEmail({
+          heading: `${clinicName} needs some documents from you`,
+          bodyHtml: `
+            <p>Hi ${escapeHtml(patientName)},</p>
+            <p>Please use the secure link below to upload:</p>
+            <ul style="margin:8px 0 0;padding-left:20px;">${itemsHtml}</ul>
+            <p style="margin-top:16px;color:#94a3b8;font-size:12px;">
+              This is an automated message and this inbox isn't monitored - please don't reply
+              directly. If you have questions, contact ${escapeHtml(clinicName)} directly.
+            </p>
+            <p style="margin-top:16px;">Kind regards,<br />${escapeHtml(clinicName)}</p>
+          `,
+          ctaText: "Upload documents",
+          ctaUrl: link,
+        }),
+      });
+      await logAuditEvent(supabase, {
+        requestId: request.id,
+        actorType: "provider",
+        actorId: provider.id,
+        eventType: "request_emailed_to_patient",
+        metadata: { patientEmail },
+      });
+    } catch (err) {
+      // A misconfigured app URL shouldn't block the request from being
+      // created - the provider still has the QR/link/WhatsApp options.
+      console.error(err);
+    }
+  }
 
   redirect(`/requests/${request.id}`);
 }
