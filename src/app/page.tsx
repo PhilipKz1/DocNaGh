@@ -13,7 +13,7 @@ const steps = [
     number: "02",
     title: "Patient gets a secure link",
     description:
-      "A one-time link and QR code are generated instantly. Text it, email it, or let the patient scan it on their own phone — no account needed.",
+      "A one-time link and QR code are generated instantly. Share it by WhatsApp, email, or text, or let the patient scan it on their own phone — no account needed.",
   },
   {
     number: "03",
@@ -23,9 +23,9 @@ const steps = [
   },
   {
     number: "04",
-    title: "Provider reviews in the dashboard",
+    title: "Provider reviews and confirms",
     description:
-      "Uploads appear against the request in real time. See what's received, what's missing, and download everything when it's complete.",
+      "Uploads appear against the request live, no refreshing needed. Once everything's in, you review it and confirm it's complete — or ask for more if something's missing.",
   },
 ];
 
@@ -66,12 +66,29 @@ function IconClipboard() {
   );
 }
 
+function IconShare() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.75" stroke="currentColor" className="h-5 w-5">
+      <circle cx="18" cy="5" r="2.5" />
+      <circle cx="6" cy="12" r="2.5" />
+      <circle cx="18" cy="19" r="2.5" />
+      <path d="M8.2 10.7l7.6-4.4M8.2 13.3l7.6 4.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 const features: { title: string; description: string; icon: ReactNode }[] = [
   {
     title: "No app install for patients",
     description:
       "Everything happens in the phone's browser through a single secure link — nothing to download, nothing to log into.",
     icon: <IconPhone />,
+  },
+  {
+    title: "Share it however works",
+    description:
+      "QR code, direct link, email, or WhatsApp — send the same secure link whichever way is easiest for that patient.",
+    icon: <IconShare />,
   },
   {
     title: "Access-token security",
@@ -104,11 +121,11 @@ export default function Home() {
                 <path d="M12 3.5 5 6v5.5c0 4.6 3 7.9 7 9 4-1.1 7-4.4 7-9V6l-7-2.5Z" strokeLinejoin="round" />
               </svg>
             </span>
-            Healthcare Document Exchange
+            MedSwyft
           </span>
           <div className="flex items-center gap-3">
-            <span className="rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-medium text-slate-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-400">
-              Beta coming soon
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-medium text-slate-500">
+              Now onboarding clinics in Ghana
             </span>
             <a
               href="/login"
@@ -143,11 +160,20 @@ export default function Home() {
               everything you need lands in your dashboard — no printed forms,
               no messy email attachments, no app for patients to install.
             </p>
-            <div className="mt-9 flex items-center justify-center gap-3">
-              <span className="inline-flex items-center gap-2 rounded-md bg-slate-900 px-6 py-3 text-sm font-semibold text-white dark:bg-white dark:text-slate-900">
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+              <a
+                href="mailto:info@medswyft.com?subject=Interested%20in%20MedSwyft%20for%20our%20clinic"
+                className="inline-flex items-center gap-2 rounded-md bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+              >
                 <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
-                Beta coming soon
-              </span>
+                Get in touch
+              </a>
+              <a
+                href="/login"
+                className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Log in
+              </a>
             </div>
           </div>
         </section>
@@ -163,7 +189,7 @@ export default function Home() {
                 Referral letters, lab results, ID copies — clinics spend hours
                 on phone calls, printed forms, and email attachments just to
                 collect documents patients already have on their phones.
-                Healthcare Document Exchange replaces that back-and-forth
+                MedSwyft replaces that back-and-forth
                 with one secure link.
               </p>
             </div>
@@ -200,15 +226,11 @@ export default function Home() {
         {/* See it in action */}
         <section className="max-w-5xl mx-auto px-6 py-20">
           <div className="text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-teal-600/20 bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700 dark:border-teal-400/20 dark:bg-teal-400/10 dark:text-teal-300">
-              Coming soon
-            </span>
             <h2 className="mt-4 text-xl sm:text-2xl font-semibold tracking-tight">
               See it in action
             </h2>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              Illustrative previews — real product screenshots are coming
-              soon.
+              A simplified look at the real dashboard and patient upload page.
             </p>
           </div>
 
@@ -234,8 +256,8 @@ export default function Home() {
                   <ul className="mt-3 space-y-2">
                     {[
                       { name: "Ama Boateng", status: "Complete", tone: "green" },
-                      { name: "Kwame Asante", status: "Partially received", tone: "amber" },
-                      { name: "Efua Mensah", status: "Pending", tone: "slate" },
+                      { name: "Kwame Asante", status: "Under review", tone: "blue" },
+                      { name: "Efua Mensah", status: "Waiting on patient", tone: "slate" },
                     ].map((row) => (
                       <li
                         key={row.name}
@@ -246,10 +268,10 @@ export default function Home() {
                           className={
                             "rounded-full px-2 py-0.5 text-[10px] font-medium " +
                             (row.tone === "green"
-                              ? "bg-green-100 text-green-700 dark:bg-green-400/10 dark:text-green-300"
-                              : row.tone === "amber"
-                                ? "bg-amber-100 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300"
-                                : "bg-slate-100 text-slate-500 dark:bg-white/10 dark:text-slate-400")
+                              ? "bg-green-100 text-green-700"
+                              : row.tone === "blue"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-slate-100 text-slate-500")
                           }
                         >
                           {row.status}
@@ -334,13 +356,16 @@ export default function Home() {
             Ready to stop chasing paperwork?
           </h2>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            We&apos;re onboarding clinics soon — check back for beta access.
+            We&apos;re onboarding clinics in Ghana now.
           </p>
           <div className="mt-7">
-            <span className="inline-flex items-center gap-2 rounded-md bg-teal-600 px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-teal-600/20">
+            <a
+              href="mailto:info@medswyft.com?subject=Interested%20in%20MedSwyft%20for%20our%20clinic"
+              className="inline-flex items-center gap-2 rounded-md bg-teal-600 px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-teal-600/20 hover:bg-teal-700"
+            >
               <span className="h-1.5 w-1.5 rounded-full bg-white" />
-              Beta coming soon
-            </span>
+              Get in touch
+            </a>
           </div>
         </section>
       </main>

@@ -10,6 +10,9 @@ export function SiteFooter() {
           MedSwyft — built for clinics in Ghana.
         </div>
         <nav className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-500">
+          <Link href="/about" className="rounded hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-600">
+            About us
+          </Link>
           <Link href="/privacy" className="rounded hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-600">
             Privacy policy
           </Link>

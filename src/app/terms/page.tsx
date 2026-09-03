@@ -45,6 +45,21 @@ export default function TermsPage() {
             </p>
           </section>
           <section>
+            <h2 className="font-semibold text-slate-900">Data controller / processor</h2>
+            <p className="mt-1">
+              Under Ghana&apos;s Data Protection Act, 2012, your clinic is the{" "}
+              <strong>data controller</strong> for the patient data you collect through MedSwyft —
+              you decide what to request and why, and you&apos;re responsible for having a lawful
+              basis to do so, and for registering with the Data Protection Commission. MedSwyft
+              acts as a <strong>data processor</strong>, handling that data only to run the
+              service on your behalf. Full detail in our{" "}
+              <Link href="/privacy" className="text-teal-700 hover:underline">
+                Privacy Policy
+              </Link>
+              .
+            </p>
+          </section>
+          <section>
             <h2 className="font-semibold text-slate-900">Availability</h2>
             <p className="mt-1">
               We aim to keep the service available but don&apos;t guarantee uninterrupted uptime.

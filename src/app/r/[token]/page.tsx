@@ -107,7 +107,11 @@ export default async function PatientRequestPage({
           </p>
         </div>
 
-        <PatientUploadForm token={token} initialDocuments={requestDocuments ?? []} />
+        <PatientUploadForm
+          token={token}
+          initialDocuments={requestDocuments ?? []}
+          clinicName={clinicName ?? "the requesting clinic"}
+        />
       </div>
     </div>
   );

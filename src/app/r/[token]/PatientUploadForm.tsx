@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ALLOWED_MIME_TYPES, validateFile } from "@/lib/storage/fileValidation";
 
@@ -14,14 +14,37 @@ type RequestDocument = {
 export function PatientUploadForm({
   token,
   initialDocuments,
+  clinicName,
 }: {
   token: string;
   initialDocuments: RequestDocument[];
+  clinicName: string;
 }) {
   const [documents, setDocuments] = useState(initialDocuments);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [confirmingRemoveId, setConfirmingRemoveId] = useState<string | null>(null);
+  // Ghana's Data Protection Act, 2012 classifies health status as "special
+  // personal data" requiring explicit consent to process - this gate is
+  // that consent, not just a UX nicety. Persisted in sessionStorage so it
+  // doesn't re-prompt on every page refresh within the same visit, but
+  // does reset for a genuinely new visit.
+  const [consented, setConsented] = useState(false);
+  useEffect(() => {
+    try {
+      setConsented(sessionStorage.getItem(`consent:${token}`) === "true");
+    } catch {
+      // Private browsing / storage blocked - just ask again, harmless.
+    }
+  }, [token]);
+  function grantConsent() {
+    setConsented(true);
+    try {
+      sessionStorage.setItem(`consent:${token}`, "true");
+    } catch {
+      // Nothing to persist to - consent still holds for this page view.
+    }
+  }
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   async function handleUpload(doc: RequestDocument, file: File) {
@@ -104,6 +127,33 @@ export function PatientUploadForm({
   }
 
   const allUploaded = documents.length > 0 && documents.every((d) => d.status === "uploaded");
+
+  if (!consented) {
+    return (
+      <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
+        <p className="text-sm text-slate-700">
+          You&apos;re about to upload health-related documents to {clinicName}. Please confirm:
+        </p>
+        <ul className="list-disc space-y-1 pl-5 text-xs text-slate-500">
+          <li>You consent to {clinicName} collecting and reviewing the file(s) you upload here.</li>
+          <li>
+            Files are encrypted, only visible to {clinicName}, and automatically deleted after the
+            retention period described above.
+          </li>
+          <li>
+            You can remove anything you upload by mistake, any time before it&apos;s auto-deleted.
+          </li>
+        </ul>
+        <button
+          type="button"
+          onClick={grantConsent}
+          className="w-full rounded-md bg-teal-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+        >
+          I understand, continue
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
