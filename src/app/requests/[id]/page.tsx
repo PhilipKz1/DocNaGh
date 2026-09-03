@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { RETENTION_DAYS } from "@/lib/retention";
 import { AppHeader } from "@/components/AppHeader";
@@ -59,12 +60,22 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
   const { data: request } = await supabase
     .from("requests")
     .select(
-      "id, patient_display_name, status, access_token, expires_at, created_at, patients(email), providers(full_name)"
+      "id, patient_id, patient_display_name, status, access_token, expires_at, created_at, patients(email), providers(full_name)"
     )
     .eq("id", id)
     .single();
 
   if (!request) notFound();
+
+  const { data: patientHistory } = request.patient_id
+    ? await supabase
+        .from("requests")
+        .select("id, status, created_at")
+        .eq("patient_id", request.patient_id)
+        .neq("id", id)
+        .order("created_at", { ascending: false })
+        .limit(5)
+    : { data: null };
 
   const { data: requestDocuments } = await supabase
     .from("request_documents")
@@ -109,6 +120,29 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
             {new Date(request.expires_at).toLocaleString()}
           </p>
         </div>
+
+        {patientHistory && patientHistory.length > 0 && (
+          <div className="rounded-lg border border-slate-200 bg-white p-4">
+            <p className="mb-2 text-xs font-semibold text-slate-700">
+              Previous requests for {request.patient_display_name}
+            </p>
+            <ul className="space-y-1">
+              {patientHistory.map((past) => (
+                <li key={past.id}>
+                  <Link
+                    href={`/requests/${past.id}`}
+                    className="flex items-center justify-between rounded px-1 py-0.5 text-xs text-slate-600 hover:bg-slate-50 hover:underline"
+                  >
+                    <span>{new Date(past.created_at).toLocaleDateString()}</span>
+                    <span className={`rounded-full px-2 py-0.5 ${REQUEST_STATUS[past.status]?.className ?? "bg-slate-100 text-slate-600"}`}>
+                      {REQUEST_STATUS[past.status]?.label ?? past.status}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {request.status === "under_review" && (
           <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 space-y-3">
