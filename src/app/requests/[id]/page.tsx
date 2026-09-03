@@ -169,7 +169,8 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
         {linkIsLive ? (
           <div className="space-y-3">
             <RequestQrCode link={link} patientName={request.patient_display_name} />
-            <div className="flex flex-wrap items-center gap-4">
+            <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
+              <p className="text-xs font-semibold text-slate-700">Link options</p>
               <ExtendExpiryControl
                 requestId={request.id}
                 createdAt={request.created_at}

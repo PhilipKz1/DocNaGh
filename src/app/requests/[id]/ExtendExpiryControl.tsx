@@ -27,13 +27,11 @@ export function ExtendExpiryControl({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const alreadyAtMax = new Date(expiresAt).getTime() >= maxDate.getTime();
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setPending(true);
     setError(null);
-    // Extend to end-of-day on the chosen date, in the patient's local time.
+    // Change to end-of-day on the chosen date, in the patient's local time.
     const chosen = new Date(`${date}T23:59:59`);
     const result = await extendRequestExpiry(requestId, chosen.toISOString());
     setPending(false);
@@ -45,17 +43,6 @@ export function ExtendExpiryControl({
     router.refresh();
   }
 
-  if (alreadyAtMax) {
-    return (
-      <p
-        className="text-xs text-slate-500"
-        title={`Requests can't stay active more than ${MAX_LIFETIME_DAYS} days after being created`}
-      >
-        Already at the maximum {MAX_LIFETIME_DAYS}-day link lifetime.
-      </p>
-    );
-  }
-
   if (!open) {
     return (
       <span className="inline-flex items-center gap-1.5">
@@ -64,10 +51,10 @@ export function ExtendExpiryControl({
           onClick={() => setOpen(true)}
           className="rounded text-sm font-medium text-teal-700 underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-600"
         >
-          Extend expiry
+          Change expiry
         </button>
         <InfoTooltip
-          text={`Give the patient more time - up to ${MAX_LIFETIME_DAYS} days from when this request was created`}
+          text={`Give the patient more time, or shorten the window - anywhere from today up to ${MAX_LIFETIME_DAYS} days after this request was created.`}
         />
       </span>
     );
@@ -88,6 +75,7 @@ export function ExtendExpiryControl({
           onChange={(e) => setDate(e.target.value)}
           className="rounded-md border border-slate-300 px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-600"
         />
+        <p className="text-xs text-slate-400">Max {toDateInputValue(maxDate)} ({MAX_LIFETIME_DAYS} days from creation)</p>
       </div>
       <button
         type="submit"

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { logAuditEvent } from "@/lib/audit";
 import { sendEmail, renderBrandedEmail, escapeHtml } from "@/lib/email";
 import { getAppUrl } from "@/lib/appUrl";
+import { recomputeRequestStatus } from "@/lib/requestStatus";
 
 const LINK_TTL_HOURS = Number(process.env.DOCUMENT_REQUEST_LINK_TTL_HOURS ?? 72);
 
@@ -266,25 +267,68 @@ export async function extendRequestExpiry(requestId: string, newExpiresAt: strin
  * already scopes this to the caller's own clinic, so a requestId for
  * another clinic just matches zero rows below.
  */
+/**
+ * Actually adds new upload slots to the request, not just an email - the
+ * original version only sent a message with a link back to the same page,
+ * which left the patient with nowhere to upload anything new if every
+ * originally-requested document was already marked uploaded (there was no
+ * new request_documents row for them to attach a file to). Also revives an
+ * already-expired link if needed, since asking for more documents only to
+ * have the link be dead defeats the point.
+ */
 export async function requestAdditionalDocuments(
   requestId: string,
   patientEmail: string,
-  message: string
+  message: string,
+  newLabels: string[],
+  sendEmailNow: boolean
 ) {
   const supabase = await createClient();
   const provider = await getCurrentProvider(supabase);
 
   const trimmedEmail = patientEmail.trim();
   const trimmedMessage = message.trim();
-  if (!trimmedEmail) return { error: "Patient email is required" };
-  if (!trimmedMessage) return { error: "Add a message describing what's needed" };
+  const labels = newLabels.map((l) => l.trim()).filter(Boolean);
+
+  if (!trimmedMessage && labels.length === 0) {
+    return { error: "Add a message, or name at least one new document to request" };
+  }
+  if (sendEmailNow && !trimmedEmail) {
+    return { error: "Add the patient's email, or turn off emailing them" };
+  }
 
   const { data: request, error } = await supabase
     .from("requests")
-    .select("id, patient_display_name, access_token")
+    .select("id, created_at, expires_at, status, patient_display_name, access_token")
     .eq("id", requestId)
     .single();
   if (error || !request) return { error: "Request not found" };
+
+  if (request.status === "cancelled") {
+    return { error: "This request was cancelled - create a new one instead." };
+  }
+
+  if (labels.length > 0) {
+    const { error: insertError } = await supabase.from("request_documents").insert(
+      labels.map((label) => ({ request_id: requestId, label }))
+    );
+    if (insertError) return { error: insertError.message };
+  }
+
+  // Revive the link if it's expired or expiring within the next 24h, so
+  // asking for more documents doesn't hand the patient a dead link -
+  // capped at the same 14-day-from-creation ceiling as a manual extension.
+  const maxAllowed =
+    new Date(request.created_at).getTime() + MAX_REQUEST_LIFETIME_DAYS * 24 * 60 * 60 * 1000;
+  const expiringSoon = new Date(request.expires_at).getTime() - Date.now() < 24 * 60 * 60 * 1000;
+  if (expiringSoon) {
+    const revivedExpiry = Math.min(Date.now() + 72 * 60 * 60 * 1000, maxAllowed);
+    if (revivedExpiry > Date.now()) {
+      await supabase.from("requests").update({ expires_at: new Date(revivedExpiry).toISOString() }).eq("id", requestId);
+    }
+  }
+
+  await recomputeRequestStatus(supabase, requestId);
 
   let appUrl: string;
   try {
@@ -295,32 +339,44 @@ export async function requestAdditionalDocuments(
   }
   const link = `${appUrl}/r/${request.access_token}`;
 
+  const itemsHtml =
+    labels.length > 0
+      ? `<ul style="margin:8px 0 0;padding-left:20px;">${labels.map((l) => `<li>${escapeHtml(l)}</li>`).join("")}</ul>`
+      : "";
   const bodyHtml = `
     <p>Hi ${escapeHtml(request.patient_display_name)},</p>
-    <p>${escapeHtml(trimmedMessage).replace(/\n/g, "<br />")}</p>
+    ${trimmedMessage ? `<p>${escapeHtml(trimmedMessage).replace(/\n/g, "<br />")}</p>` : ""}
+    ${itemsHtml}
   `;
 
-  await sendEmail({
-    to: trimmedEmail,
-    subject: `Additional documents needed - ${request.patient_display_name}`,
-    html: renderBrandedEmail({
-      heading: "A few more documents are needed",
-      bodyHtml,
-      ctaText: "Upload documents",
-      ctaUrl: link,
-    }),
-  });
+  if (sendEmailNow && trimmedEmail) {
+    await sendEmail({
+      to: trimmedEmail,
+      subject: `Additional documents needed - ${request.patient_display_name}`,
+      html: renderBrandedEmail({
+        heading: "A few more documents are needed",
+        bodyHtml,
+        ctaText: "Upload documents",
+        ctaUrl: link,
+      }),
+    });
+  }
 
   await logAuditEvent(supabase, {
     requestId,
     actorType: "provider",
     actorId: provider.id,
     eventType: "additional_documents_requested",
-    metadata: { patientEmail: trimmedEmail },
+    metadata: { patientEmail: sendEmailNow ? trimmedEmail : null, newLabels: labels },
   });
 
   revalidatePath(`/requests/${requestId}`);
-  return { error: null };
+  return {
+    error: null,
+    link,
+    patientName: request.patient_display_name,
+    emailed: sendEmailNow && !!trimmedEmail,
+  };
 }
 
 /**
