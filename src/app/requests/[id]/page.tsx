@@ -11,6 +11,7 @@ import { MarkCompleteButton } from "./MarkCompleteButton";
 import { ExtendExpiryControl } from "./ExtendExpiryControl";
 import { RealtimeRequestWatcher } from "./RealtimeRequestWatcher";
 import { getAppUrl } from "@/lib/appUrl";
+import { InfoTooltip } from "@/components/InfoTooltip";
 
 const STATUS_LABEL: Record<string, string> = {
   requested: "Requested",
@@ -18,13 +19,37 @@ const STATUS_LABEL: Record<string, string> = {
   missing: "Missing",
 };
 
-const REQUEST_STATUS: Record<string, { label: string; className: string }> = {
-  pending: { label: "Waiting on patient", className: "bg-slate-100 text-slate-700" },
-  partially_received: { label: "Partially received", className: "bg-amber-100 text-amber-800" },
-  under_review: { label: "Under review", className: "bg-blue-100 text-blue-800" },
-  complete: { label: "Complete", className: "bg-emerald-100 text-emerald-800" },
-  expired: { label: "Expired", className: "bg-slate-100 text-slate-500" },
-  cancelled: { label: "Cancelled", className: "bg-red-100 text-red-700" },
+const REQUEST_STATUS: Record<string, { label: string; className: string; meaning: string }> = {
+  pending: {
+    label: "Waiting on patient",
+    className: "bg-slate-100 text-slate-700",
+    meaning: "The link is live and the patient hasn't uploaded anything yet.",
+  },
+  partially_received: {
+    label: "Partially received",
+    className: "bg-amber-100 text-amber-800",
+    meaning: "Some but not all requested documents have been uploaded.",
+  },
+  under_review: {
+    label: "Under review",
+    className: "bg-blue-100 text-blue-800",
+    meaning: "Everything requested was uploaded - check it, then mark complete or ask for more.",
+  },
+  complete: {
+    label: "Complete",
+    className: "bg-emerald-100 text-emerald-800",
+    meaning: "You've confirmed everything needed was received. The link no longer works.",
+  },
+  expired: {
+    label: "Expired",
+    className: "bg-slate-100 text-slate-500",
+    meaning: "The link's time limit passed before everything was received.",
+  },
+  cancelled: {
+    label: "Cancelled",
+    className: "bg-red-100 text-red-700",
+    meaning: "The link was manually revoked and no longer works.",
+  },
 };
 
 export default async function RequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -61,6 +86,7 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
   const statusInfo = REQUEST_STATUS[request.status] ?? {
     label: request.status,
     className: "bg-slate-100 text-slate-700",
+    meaning: "",
   };
 
   return (
@@ -75,6 +101,7 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
             <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusInfo.className}`}>
               {statusInfo.label}
             </span>
+            {statusInfo.meaning && <InfoTooltip text={statusInfo.meaning} />}
           </div>
           <p className="text-sm text-slate-500">
             Requested by {request.providers?.full_name ?? "Unknown"} on{" "}

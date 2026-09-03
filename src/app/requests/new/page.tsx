@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { createRequest } from "@/app/actions/requests";
 import { AppHeader } from "@/components/AppHeader";
+import { InfoTooltip } from "@/components/InfoTooltip";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -74,7 +75,10 @@ export default function NewRequestPage() {
           </div>
 
           <div className="space-y-2">
-            <span className="text-sm font-medium">Requested documents</span>
+            <span className="inline-flex items-center gap-1.5 text-sm font-medium">
+              Requested documents
+              <InfoTooltip text="One line per document, e.g. 'Referral letter' or 'Recent lab results'. The patient sees this exact label and uploads one file for each." />
+            </span>
             {labels.map((label, i) => (
               <div key={i} className="flex gap-2">
                 <input

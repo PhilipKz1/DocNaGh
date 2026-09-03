@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { extendRequestExpiry } from "@/app/actions/requests";
+import { InfoTooltip } from "@/components/InfoTooltip";
 
 const MAX_LIFETIME_DAYS = 14;
 
@@ -57,14 +58,18 @@ export function ExtendExpiryControl({
 
   if (!open) {
     return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        title={`Give the patient more time - up to ${MAX_LIFETIME_DAYS} days from when this request was created`}
-        className="rounded text-sm font-medium text-teal-700 underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-600"
-      >
-        Extend expiry
-      </button>
+      <span className="inline-flex items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="rounded text-sm font-medium text-teal-700 underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-600"
+        >
+          Extend expiry
+        </button>
+        <InfoTooltip
+          text={`Give the patient more time - up to ${MAX_LIFETIME_DAYS} days from when this request was created`}
+        />
+      </span>
     );
   }
 

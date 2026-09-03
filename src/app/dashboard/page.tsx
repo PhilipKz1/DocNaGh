@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireProvider } from "@/lib/adminAuth";
 import { AppHeader } from "@/components/AppHeader";
 import { OnboardingTip } from "./OnboardingTip";
+import { InfoTooltip } from "@/components/InfoTooltip";
 
 const STATUS_STYLE: Record<string, { label: string; className: string }> = {
   pending: { label: "Waiting on patient", className: "bg-slate-100 text-slate-700" },
@@ -24,11 +25,13 @@ export default async function DashboardPage() {
       <AppHeader homeHref="/dashboard" />
       <div className="max-w-3xl mx-auto p-6 sm:p-8 space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-xl font-semibold">Document requests</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-semibold">Document requests</h1>
+            <InfoTooltip text="Each request sends a patient a secure link to upload files from their phone. Click a row to see progress, download files, or follow up." />
+          </div>
           <div className="flex items-center gap-4">
             <Link
               href="/requests/new"
-              title="Ask a patient for documents by name and type"
               className="rounded-md bg-teal-600 text-white px-4 py-2 text-sm font-medium hover:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
             >
               New request

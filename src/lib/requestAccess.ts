@@ -17,7 +17,9 @@ export async function getRequestByToken(token: string) {
 
   const { data: request, error } = await supabase
     .from("requests")
-    .select("id, clinic_id, provider_id, patient_id, patient_display_name, status, expires_at, access_token")
+    .select(
+      "id, clinic_id, provider_id, patient_id, patient_display_name, status, expires_at, access_token, clinics(name), providers(full_name)"
+    )
     .eq("access_token", token)
     .maybeSingle();
 
