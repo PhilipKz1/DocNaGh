@@ -20,7 +20,14 @@ export async function middleware(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+    // unsafe-eval: something in our own bundled JS (most likely inside the
+    // Supabase SDK - a JWT/crypto helper or its cross-tab session lock
+    // polyfill) calls Function()/eval() internally, which strict-dynamic
+    // does NOT cover (it only governs which <script> tags are trusted, not
+    // string-to-code evaluation). nonce + strict-dynamic remain the actual
+    // defense against injected/external scripts; this only permits our own
+    // already-trusted bundle to do what it already needs to do.
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval'`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data:",
     "font-src 'self'",
