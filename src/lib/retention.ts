@@ -4,14 +4,15 @@ import { logAuditEvent } from "@/lib/audit";
 
 /**
  * Days a document is kept after upload before being permanently deleted.
- * This app is a relay to get documents from patient to provider, not the
- * clinic's system of record - the provider is expected to have downloaded
- * and filed anything they need well before this window closes. Keeping the
- * window short bounds how much PHI sits here at any given time (Ghana's
- * Data Protection Act 2012 retention-limitation principle: don't keep
- * personal data longer than necessary for the purpose it was collected for).
+ * Set to 1 year: clinics use this to follow patient history over time, not
+ * just as a one-off relay. Ghana's Data Protection Act 2012's retention-
+ * limitation principle doesn't set a fixed number - it requires retention
+ * to match the actual purpose data was collected for, and "supporting
+ * ongoing patient care" is that purpose here, so this is deliberately much
+ * longer than a pure hand-off window would need. Keep this - and the
+ * Privacy Policy's stated purpose - in sync if the retention need changes.
  */
-export const RETENTION_DAYS = Number(process.env.DOCUMENT_RETENTION_DAYS ?? 30);
+export const RETENTION_DAYS = Number(process.env.DOCUMENT_RETENTION_DAYS ?? 365);
 
 /**
  * Deletes the storage object and DB row for every document past its

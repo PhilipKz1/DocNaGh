@@ -142,10 +142,13 @@ export default function PrivacyPage() {
           <section>
             <h2 className="font-semibold text-slate-900">How long we keep it</h2>
             <p className="mt-1">
-              Uploaded documents are automatically deleted a set number of days after upload (see
-              the retention period configured for your clinic) in line with the data minimisation
-              principle under Ghana&apos;s Data Protection Act. Account and audit-log records are
-              kept only as long as needed to operate the service and meet legal obligations.
+              Uploaded documents are kept for <strong>1 year</strong> after upload, then
+              automatically and permanently deleted. Ghana&apos;s Data Protection Act doesn&apos;t set a
+              fixed retention limit — it requires retention to match the actual purpose data was
+              collected for. That purpose here is supporting a patient&apos;s ongoing care, not just
+              a one-off hand-off, which is why the window is a year rather than days. Account and
+              audit-log records are kept only as long as needed to operate the service and meet
+              legal obligations.
             </p>
           </section>
 
