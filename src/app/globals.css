@@ -45,6 +45,19 @@ input:-webkit-autofill:focus {
   transition: background-color 5000s ease-in-out 0s;
 }
 
+/* iOS Safari auto-zooms the whole page when a tapped input's font-size is
+   under 16px - most inputs here use Tailwind's text-sm (14px). This is the
+   one thing that actually breaks on iPhone specifically (Android/desktop
+   are unaffected), so it's scoped to small screens only, leaving the
+   14px sizing untouched everywhere the bug doesn't apply. */
+@media (max-width: 640px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
