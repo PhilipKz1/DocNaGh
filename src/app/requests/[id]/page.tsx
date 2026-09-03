@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { RETENTION_DAYS } from "@/lib/retention";
 import { AppHeader } from "@/components/AppHeader";
+import { getUnderReviewCount } from "@/lib/dashboardCounts";
 import { DownloadButton } from "./DownloadButton";
 import { DeleteDocumentButton } from "./DeleteDocumentButton";
 import { RequestQrCode } from "./RequestQrCode";
@@ -13,6 +14,7 @@ import { ExtendExpiryControl } from "./ExtendExpiryControl";
 import { RealtimeRequestWatcher } from "./RealtimeRequestWatcher";
 import { getAppUrl } from "@/lib/appUrl";
 import { InfoTooltip } from "@/components/InfoTooltip";
+import { AddNoteForm } from "./AddNoteForm";
 
 const STATUS_LABEL: Record<string, string> = {
   requested: "Requested",
@@ -57,13 +59,31 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data: request } = await supabase
-    .from("requests")
-    .select(
-      "id, patient_id, patient_display_name, status, access_token, expires_at, created_at, patients(email), providers(full_name)"
-    )
-    .eq("id", id)
-    .single();
+  // Fired together instead of one after another - none of these depend on
+  // each other's results, so awaiting them sequentially was pure added
+  // latency (this page was doing 5 round trips back-to-back).
+  const [{ data: request }, { data: requestDocuments }, { data: auditEvents }, reviewCount] =
+    await Promise.all([
+      supabase
+        .from("requests")
+        .select(
+          "id, patient_id, patient_display_name, status, access_token, expires_at, created_at, patients(email), providers(full_name)"
+        )
+        .eq("id", id)
+        .single(),
+      supabase
+        .from("request_documents")
+        .select("id, label, notes, status, documents(id, file_name, size_bytes, uploaded_at)")
+        .eq("request_id", id)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("audit_events")
+        .select("id, event_type, actor_type, created_at, metadata")
+        .eq("request_id", id)
+        .order("created_at", { ascending: false })
+        .limit(20),
+      getUnderReviewCount(supabase),
+    ]);
 
   if (!request) notFound();
 
@@ -77,19 +97,6 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
         .limit(5)
     : { data: null };
 
-  const { data: requestDocuments } = await supabase
-    .from("request_documents")
-    .select("id, label, notes, status, documents(id, file_name, size_bytes, uploaded_at)")
-    .eq("request_id", id)
-    .order("created_at", { ascending: true });
-
-  const { data: auditEvents } = await supabase
-    .from("audit_events")
-    .select("id, event_type, actor_type, created_at, metadata")
-    .eq("request_id", id)
-    .order("created_at", { ascending: false })
-    .limit(20);
-
   const link = `${getAppUrl()}/r/${request.access_token}`;
   const linkIsLive =
     ["pending", "partially_received", "under_review"].includes(request.status) &&
@@ -102,7 +109,12 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="min-h-screen bg-[var(--background)] text-slate-900">
-      <AppHeader homeHref="/dashboard" backHref="/dashboard" backLabel="Back to requests" />
+      <AppHeader
+        homeHref="/dashboard"
+        backHref="/dashboard"
+        backLabel="Back to requests"
+        reviewCount={reviewCount}
+      />
       <RealtimeRequestWatcher requestId={request.id} />
 
       <div className="max-w-2xl mx-auto p-6 sm:p-8 space-y-8">
@@ -156,7 +168,7 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
 
         {linkIsLive ? (
           <div className="space-y-3">
-            <RequestQrCode link={link} />
+            <RequestQrCode link={link} patientName={request.patient_display_name} />
             <div className="flex flex-wrap items-center gap-4">
               <ExtendExpiryControl
                 requestId={request.id}
@@ -217,16 +229,36 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
         <RequestMoreDocumentsForm requestId={request.id} defaultEmail={request.patients?.email ?? ""} />
 
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-slate-700" title="Updates live as things happen - no need to refresh">
-            Activity
-          </h2>
-          <ul className="space-y-1 text-xs text-slate-500">
-            {auditEvents?.map((event) => (
-              <li key={event.id}>
-                {new Date(event.created_at).toLocaleString()} — {event.actor_type}: {event.event_type}
-              </li>
-            ))}
-            {(!auditEvents || auditEvents.length === 0) && <li>No activity yet.</li>}
+          <div className="flex items-center gap-1.5">
+            <h2 className="text-sm font-semibold text-slate-700">Activity</h2>
+            <InfoTooltip text="Updates live as things happen - patient uploads, staff actions, and notes all land here with a timestamp." />
+          </div>
+          <AddNoteForm requestId={request.id} />
+          <ul className="space-y-1.5 text-xs">
+            {auditEvents?.map((event) => {
+              if (event.event_type === "note_added") {
+                const meta = event.metadata as { text?: string; authorName?: string } | null;
+                return (
+                  <li
+                    key={event.id}
+                    className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-amber-900"
+                  >
+                    <span className="font-medium">{meta?.authorName ?? "Staff"}:</span> {meta?.text}
+                    <span className="ml-2 text-amber-700/70">
+                      {new Date(event.created_at).toLocaleString()}
+                    </span>
+                  </li>
+                );
+              }
+              return (
+                <li key={event.id} className="text-slate-500">
+                  {new Date(event.created_at).toLocaleString()} — {event.actor_type}: {event.event_type}
+                </li>
+              );
+            })}
+            {(!auditEvents || auditEvents.length === 0) && (
+              <li className="text-slate-500">No activity yet.</li>
+            )}
           </ul>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { requireClinicAdmin } from "@/lib/adminAuth";
+import { getUnderReviewCount } from "@/lib/dashboardCounts";
 import { AppHeader } from "@/components/AppHeader";
 import { InviteProviderForm } from "./InviteProviderForm";
 import { RemoveProviderButton } from "./RemoveProviderButton";
@@ -7,15 +8,23 @@ import { ResendInviteButton } from "./ResendInviteButton";
 export default async function TeamPage() {
   const { supabase, provider: admin } = await requireClinicAdmin();
 
-  const { data: teammates } = await supabase
-    .from("providers")
-    .select("id, full_name, email, role")
-    .eq("clinic_id", admin.clinic_id)
-    .order("full_name", { ascending: true });
+  const [{ data: teammates }, reviewCount] = await Promise.all([
+    supabase
+      .from("providers")
+      .select("id, full_name, email, role")
+      .eq("clinic_id", admin.clinic_id)
+      .order("full_name", { ascending: true }),
+    getUnderReviewCount(supabase),
+  ]);
 
   return (
     <div className="min-h-screen bg-[var(--background)] text-slate-900">
-      <AppHeader homeHref="/dashboard" backHref="/dashboard" backLabel="Back to dashboard" />
+      <AppHeader
+        homeHref="/dashboard"
+        backHref="/dashboard"
+        backLabel="Back to dashboard"
+        reviewCount={reviewCount}
+      />
       <div className="max-w-2xl mx-auto p-6 sm:p-8 space-y-10">
         <h1 className="text-xl font-semibold">Team</h1>
 

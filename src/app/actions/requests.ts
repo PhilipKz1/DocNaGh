@@ -17,7 +17,7 @@ async function getCurrentProvider(supabase: Awaited<ReturnType<typeof createClie
 
   const { data: provider, error } = await supabase
     .from("providers")
-    .select("id, clinic_id")
+    .select("id, clinic_id, full_name")
     .eq("user_id", user.id)
     .single();
 
@@ -272,6 +272,33 @@ export async function requestAdditionalDocuments(
     actorId: provider.id,
     eventType: "additional_documents_requested",
     metadata: { patientEmail: trimmedEmail },
+  });
+
+  revalidatePath(`/requests/${requestId}`);
+  return { error: null };
+}
+
+/**
+ * Internal note staff leave on a request - "called patient, uploading
+ * tomorrow" and the like. Piggybacks on audit_events (note_added) instead
+ * of a new table: it's already timestamped, attributed, RLS-scoped to the
+ * clinic, and rendered in the same activity timeline, so a note just shows
+ * up inline with everything else that happened on the request.
+ */
+export async function addRequestNote(requestId: string, text: string) {
+  const supabase = await createClient();
+  const provider = await getCurrentProvider(supabase);
+
+  const trimmed = text.trim();
+  if (!trimmed) return { error: "Note can't be empty" };
+  if (trimmed.length > 1000) return { error: "Note is too long (max 1000 characters)" };
+
+  await logAuditEvent(supabase, {
+    requestId,
+    actorType: "provider",
+    actorId: provider.id,
+    eventType: "note_added",
+    metadata: { text: trimmed, authorName: provider.full_name },
   });
 
   revalidatePath(`/requests/${requestId}`);

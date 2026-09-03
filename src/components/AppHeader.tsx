@@ -6,10 +6,13 @@ export function AppHeader({
   homeHref,
   backHref,
   backLabel,
+  reviewCount,
 }: {
   homeHref: string;
   backHref?: string;
   backLabel?: string;
+  /** Requests sitting in "under_review" for this clinic - shown as a persistent, clickable indicator so it isn't only visible on the dashboard. */
+  reviewCount?: number;
 }) {
   return (
     <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
@@ -38,14 +41,25 @@ export function AppHeader({
             </Link>
           )}
         </div>
-        <form action={signOut}>
-          <button
-            type="submit"
-            className="rounded text-sm text-slate-500 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-600"
-          >
-            Sign out
-          </button>
-        </form>
+        <div className="flex items-center gap-4">
+          {!!reviewCount && (
+            <Link
+              href="/dashboard?status=under_review"
+              className="flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-800 hover:bg-blue-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-600"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
+              {reviewCount} need{reviewCount === 1 ? "s" : ""} review
+            </Link>
+          )}
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="rounded text-sm text-slate-500 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-600"
+            >
+              Sign out
+            </button>
+          </form>
+        </div>
       </div>
     </header>
   );
