@@ -20,7 +20,7 @@ export function DownloadButton({ documentId, fileName }: { documentId: string; f
     <button
       onClick={handleDownload}
       disabled={loading}
-      className="text-sm text-blue-600 hover:underline disabled:opacity-50"
+      className="text-sm text-teal-700 hover:underline disabled:opacity-50"
     >
       {loading ? "Preparing..." : `Download ${fileName}`}
     </button>

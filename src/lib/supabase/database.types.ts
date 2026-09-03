@@ -83,7 +83,7 @@ export type Database = {
           provider_id: string;
           patient_id: string | null;
           patient_display_name: string;
-          status: "pending" | "partially_received" | "complete" | "expired" | "cancelled";
+          status: "pending" | "partially_received" | "under_review" | "complete" | "expired" | "cancelled";
           access_token: string;
           expires_at: string;
           created_at: string;
@@ -94,7 +94,7 @@ export type Database = {
           provider_id: string;
           patient_id?: string | null;
           patient_display_name: string;
-          status?: "pending" | "partially_received" | "complete" | "expired" | "cancelled";
+          status?: "pending" | "partially_received" | "under_review" | "complete" | "expired" | "cancelled";
           access_token?: string;
           expires_at: string;
           created_at?: string;

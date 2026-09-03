@@ -2,16 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Soft, cool, always-light palette - healthcare UI research consistently
+ * points at muted blues/teals/grays with generous white space over dark
+ * themes, which read as clinical/harsh and were the direct complaint here
+ * ("too dark everywhere"). Deliberately not following prefers-color-scheme:
+ * one consistent light theme everywhere is simpler to keep accessible and
+ * on-brand than maintaining two, and matches what was asked for.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #f4f7fa;
+  --surface: #ffffff;
+  --foreground: #1e293b;
+  --muted: #64748b;
+  --border: #dbe4ec;
+  --brand: #0d9488;
+  --brand-hover: #0f766e;
 }
 
 body {

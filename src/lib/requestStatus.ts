@@ -28,7 +28,7 @@ export async function recomputeRequestStatus(
 
   const allUploaded = !!allDocs?.length && allDocs.every((d) => d.status === "uploaded");
   const anyUploaded = allDocs?.some((d) => d.status === "uploaded");
-  const nextStatus = allUploaded ? "complete" : anyUploaded ? "partially_received" : "pending";
+  const nextStatus = allUploaded ? "under_review" : anyUploaded ? "partially_received" : "pending";
 
   await supabase.from("requests").update({ status: nextStatus }).eq("id", requestId);
   return nextStatus;

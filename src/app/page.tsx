@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { GhanaIcon } from "@/components/GhanaIcon";
+import { SiteFooter } from "@/components/SiteFooter";
 
 const steps = [
   {
@@ -126,7 +128,8 @@ export default function Home() {
             className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_50%_at_50%_0%,theme(colors.teal.100),transparent)] dark:bg-[radial-gradient(60%_50%_at_50%_0%,theme(colors.teal.900/0.25),transparent)]"
           />
           <div className="max-w-5xl mx-auto px-6 pt-24 pb-20 text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-teal-600/20 bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700 dark:border-teal-400/20 dark:bg-teal-400/10 dark:text-teal-300">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-teal-600/20 bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700">
+              <GhanaIcon className="h-3.5 w-3.5" />
               Built for clinics in Ghana
             </span>
             <h1 className="mt-5 text-4xl sm:text-5xl font-semibold tracking-tight text-balance">
@@ -342,12 +345,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-slate-200 dark:border-white/10">
-        <div className="max-w-5xl mx-auto px-6 py-8 text-xs text-slate-400 dark:text-slate-500">
-          Healthcare Document Exchange — provider-initiated document
-          requests.
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

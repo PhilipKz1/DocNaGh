@@ -132,6 +132,89 @@ export async function cancelRequest(requestId: string) {
 }
 
 /**
+ * Provider-confirmed close-out: everything requested has been uploaded
+ * (status is "under_review"), and the provider has actually looked at it
+ * and is satisfied nothing more is needed. Kept as a deliberate manual step
+ * rather than auto-completing the moment every document lands, so a
+ * provider can't miss a document that looks right by filename but is
+ * actually wrong/incomplete - use "Request more documents" instead if so.
+ */
+export async function markRequestComplete(requestId: string) {
+  const supabase = await createClient();
+  const provider = await getCurrentProvider(supabase);
+
+  const { data: request, error } = await supabase
+    .from("requests")
+    .update({ status: "complete" })
+    .eq("id", requestId)
+    .eq("status", "under_review")
+    .select("id")
+    .single();
+
+  if (error || !request) return { error: "Unable to mark this request complete." };
+
+  await logAuditEvent(supabase, {
+    requestId,
+    actorType: "provider",
+    actorId: provider.id,
+    eventType: "request_marked_complete",
+  });
+
+  revalidatePath(`/requests/${requestId}`);
+  return { error: null };
+}
+
+const MAX_REQUEST_LIFETIME_DAYS = 14;
+
+/**
+ * Pushes a request's expiry further out - e.g. a patient needs more time
+ * to gather documents. Capped at 14 days from when the request was
+ * originally created, not 14 days from now each time, so this can't be
+ * used to keep a single link alive indefinitely.
+ */
+export async function extendRequestExpiry(requestId: string, newExpiresAt: string) {
+  const supabase = await createClient();
+  const provider = await getCurrentProvider(supabase);
+
+  const { data: request } = await supabase
+    .from("requests")
+    .select("created_at")
+    .eq("id", requestId)
+    .single();
+  if (!request) return { error: "Request not found" };
+
+  const requested = new Date(newExpiresAt).getTime();
+  if (Number.isNaN(requested)) return { error: "Invalid date" };
+
+  const maxAllowed =
+    new Date(request.created_at).getTime() + MAX_REQUEST_LIFETIME_DAYS * 24 * 60 * 60 * 1000;
+  if (requested > maxAllowed) {
+    return { error: `Can't extend past ${MAX_REQUEST_LIFETIME_DAYS} days from when this request was created.` };
+  }
+  if (requested <= Date.now()) {
+    return { error: "New expiry must be in the future." };
+  }
+
+  const { error } = await supabase
+    .from("requests")
+    .update({ expires_at: new Date(requested).toISOString() })
+    .eq("id", requestId)
+    .in("status", ["pending", "partially_received", "under_review"]);
+  if (error) return { error: error.message };
+
+  await logAuditEvent(supabase, {
+    requestId,
+    actorType: "provider",
+    actorId: provider.id,
+    eventType: "expiry_extended",
+    metadata: { newExpiresAt: new Date(requested).toISOString() },
+  });
+
+  revalidatePath(`/requests/${requestId}`);
+  return { error: null };
+}
+
+/**
  * Emails the patient a message the provider writes themselves - e.g. what's
  * been sent so far isn't enough and something specific is still needed.
  * RLS on `requests` here (the session-bound client, not service role)

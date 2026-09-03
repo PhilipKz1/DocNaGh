@@ -35,10 +35,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white p-8 text-slate-900 dark:bg-[#0a0f14] dark:text-slate-100">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--background)] p-8 text-slate-900">
       <form
         action={formAction}
-        className="w-full max-w-sm space-y-5 rounded-xl border border-slate-200 bg-white p-8 shadow-sm dark:border-white/10 dark:bg-white/5"
+        className="w-full max-w-sm space-y-5 rounded-xl border border-slate-200 bg-white p-8 shadow-sm"
       >
         <h1 className="text-xl font-semibold">Provider sign in</h1>
 
