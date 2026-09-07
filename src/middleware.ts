@@ -31,7 +31,13 @@ export async function middleware(request: NextRequest) {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data:",
     "font-src 'self'",
-    "connect-src 'self' https://*.supabase.co",
+    // wss: listed explicitly, not assumed covered by https: - Supabase
+    // Realtime (used for live updates on the request detail page) opens a
+    // WebSocket, and the browser enforced an exact scheme match here
+    // rather than treating https: as also permitting wss:, which crashed
+    // the whole page with an uncaught exception the moment that
+    // connection was refused.
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
