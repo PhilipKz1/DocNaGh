@@ -1,9 +1,8 @@
 import { requireProvider } from "@/lib/adminAuth";
 import { getUnderReviewCount } from "@/lib/dashboardCounts";
 import { AppShell, type NavItem } from "@/components/AppShell";
-import { AccountSettings } from "./AccountSettings";
 
-export default async function AccountPage() {
+export default async function RequestsLayout({ children }: { children: React.ReactNode }) {
   const { supabase, provider } = await requireProvider();
   const reviewCount = await getUnderReviewCount(supabase);
 
@@ -17,9 +16,7 @@ export default async function AccountPage() {
 
   return (
     <AppShell navItems={navItems} reviewCount={reviewCount}>
-      <div className="max-w-lg mx-auto p-6 sm:p-8">
-        <AccountSettings />
-      </div>
+      {children}
     </AppShell>
   );
 }

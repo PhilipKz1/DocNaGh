@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-type Status = "checking" | "ready-to-accept" | "verifying" | "ready" | "invalid";
+type Status = "checking" | "ready-to-accept" | "verifying" | "ready" | "invalid" | "success";
 
 /**
  * Destination for both "forgot password" recovery links and first-time
@@ -45,6 +45,7 @@ export function ResetPasswordForm() {
   }, [tokenHash, validType]);
 
   async function handleAccept() {
+    if (status === "verifying") return;
     setStatus("verifying");
     const supabase = createClient();
 
@@ -85,6 +86,7 @@ export function ResetPasswordForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (pending) return;
     setError(null);
 
     if (password.length < 8) {
@@ -106,12 +108,26 @@ export function ResetPasswordForm() {
       return;
     }
 
-    router.push(next);
-    router.refresh();
+    setStatus("success");
+    setTimeout(() => {
+      router.push(next);
+      router.refresh();
+    }, 1500);
   }
 
   if (status === "checking") {
     return <p className="text-sm text-slate-500 dark:text-slate-400">Loading…</p>;
+  }
+
+  if (status === "success") {
+    return (
+      <div className="max-w-sm text-center space-y-2">
+        <h1 className="text-lg font-semibold text-teal-700">Password updated</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          Taking you to your dashboard…
+        </p>
+      </div>
+    );
   }
 
   if (status === "invalid") {

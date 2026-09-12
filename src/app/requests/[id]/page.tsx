@@ -2,8 +2,6 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { RETENTION_DAYS } from "@/lib/retention";
-import { AppHeader } from "@/components/AppHeader";
-import { getUnderReviewCount } from "@/lib/dashboardCounts";
 import { DownloadButton } from "./DownloadButton";
 import { DeleteDocumentButton } from "./DeleteDocumentButton";
 import { RequestQrCode } from "./RequestQrCode";
@@ -62,7 +60,7 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
   // Fired together instead of one after another - none of these depend on
   // each other's results, so awaiting them sequentially was pure added
   // latency (this page was doing 5 round trips back-to-back).
-  const [{ data: request }, { data: requestDocuments }, { data: auditEvents }, reviewCount] =
+  const [{ data: request }, { data: requestDocuments }, { data: auditEvents }] =
     await Promise.all([
       supabase
         .from("requests")
@@ -82,7 +80,6 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
         .eq("request_id", id)
         .order("created_at", { ascending: false })
         .limit(20),
-      getUnderReviewCount(supabase),
     ]);
 
   if (!request) notFound();
@@ -108,16 +105,19 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
   };
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-slate-900">
-      <AppHeader
-        homeHref="/dashboard"
-        backHref="/dashboard"
-        backLabel="Back to requests"
-        reviewCount={reviewCount}
-      />
+    <div className="max-w-2xl mx-auto p-6 sm:p-8 space-y-8">
       <RealtimeRequestWatcher requestId={request.id} />
 
-      <div className="max-w-2xl mx-auto p-6 sm:p-8 space-y-8">
+      <Link
+        href="/dashboard"
+        className="inline-flex items-center gap-1 rounded text-sm text-slate-500 hover:text-slate-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-600"
+      >
+        <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" stroke="currentColor" className="h-4 w-4">
+          <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        Back to requests
+      </Link>
+
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-xl font-semibold">{request.patient_display_name}</h1>
@@ -262,7 +262,6 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
             )}
           </ul>
         </div>
-      </div>
     </div>
   );
 }

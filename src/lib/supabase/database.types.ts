@@ -148,6 +148,52 @@ export type Database = {
           },
         ];
       };
+      request_templates: {
+        Row: {
+          id: string;
+          clinic_id: string;
+          name: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          clinic_id: string;
+          name: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["request_templates"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "request_templates_clinic_id_fkey";
+            columns: ["clinic_id"];
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      request_template_documents: {
+        Row: {
+          id: string;
+          template_id: string;
+          label: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          template_id: string;
+          label: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["request_template_documents"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "request_template_documents_template_id_fkey";
+            columns: ["template_id"];
+            referencedRelation: "request_templates";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       documents: {
         Row: {
           id: string;

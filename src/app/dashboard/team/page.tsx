@@ -1,9 +1,15 @@
 import { requireClinicAdmin } from "@/lib/adminAuth";
 import { getUnderReviewCount } from "@/lib/dashboardCounts";
-import { AppHeader } from "@/components/AppHeader";
+import { AppShell, type NavItem } from "@/components/AppShell";
 import { InviteProviderForm } from "./InviteProviderForm";
 import { RemoveProviderButton } from "./RemoveProviderButton";
 import { ResendInviteButton } from "./ResendInviteButton";
+
+const NAV_ITEMS: NavItem[] = [
+  { href: "/dashboard", label: "Overview", icon: "grid" },
+  { href: "/dashboard/team", label: "Team", icon: "team" },
+  { href: "/account", label: "Account", icon: "account" },
+];
 
 export default async function TeamPage() {
   const { supabase, provider: admin } = await requireClinicAdmin();
@@ -18,13 +24,7 @@ export default async function TeamPage() {
   ]);
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-slate-900">
-      <AppHeader
-        homeHref="/dashboard"
-        backHref="/dashboard"
-        backLabel="Back to dashboard"
-        reviewCount={reviewCount}
-      />
+    <AppShell navItems={NAV_ITEMS} reviewCount={reviewCount}>
       <div className="max-w-2xl mx-auto p-6 sm:p-8 space-y-10">
         <h1 className="text-xl font-semibold">Team</h1>
 
@@ -55,6 +55,6 @@ export default async function TeamPage() {
           <InviteProviderForm />
         </section>
       </div>
-    </div>
+    </AppShell>
   );
 }

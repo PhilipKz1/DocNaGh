@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { requirePlatformAdmin } from "@/lib/adminAuth";
 import { createServiceRoleClient } from "@/lib/supabase/server";
-import { AppHeader } from "@/components/AppHeader";
+import { AppShell, type NavItem } from "@/components/AppShell";
 import { CreateClinicForm } from "./CreateClinicForm";
 import { DeleteClinicButton } from "./DeleteClinicButton";
 import { ResendInviteButton } from "./ResendInviteButton";
+
+const NAV_ITEMS: NavItem[] = [{ href: "/harbor", label: "Clinics", icon: "clinics" }];
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -20,8 +22,7 @@ export default async function AdminPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-slate-900">
-      <AppHeader homeHref="/harbor" />
+    <AppShell navItems={NAV_ITEMS}>
       <div className="max-w-2xl mx-auto p-6 sm:p-8 space-y-10">
         <h1 className="text-xl font-semibold">Platform admin</h1>
 
@@ -53,6 +54,6 @@ export default async function AdminPage() {
           <CreateClinicForm />
         </section>
       </div>
-    </div>
+    </AppShell>
   );
 }
