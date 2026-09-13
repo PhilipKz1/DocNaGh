@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ALLOWED_MIME_TYPES, validateFile } from "@/lib/storage/fileValidation";
+import { stripImageMetadata } from "@/lib/stripImageMetadata";
 
 type RequestDocument = {
   id: string;
@@ -58,14 +59,22 @@ export function PatientUploadForm({
 
     setBusyId(doc.id);
     try {
+      // Strip EXIF/GPS/device metadata before it ever leaves the browser -
+      // fails open to the original file if stripping isn't possible for
+      // this type or something goes wrong decoding it.
+      const cleaned = await stripImageMetadata(file);
+      const uploadFile = validateFile({ mimeType: cleaned.type, sizeBytes: cleaned.size })
+        ? file
+        : cleaned;
+
       const targetRes = await fetch(`/api/requests/${token}/upload-target`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           requestDocumentId: doc.id,
-          fileName: file.name,
-          mimeType: file.type,
-          sizeBytes: file.size,
+          fileName: uploadFile.name,
+          mimeType: uploadFile.type,
+          sizeBytes: uploadFile.size,
         }),
       });
       if (!targetRes.ok) throw new Error((await targetRes.json()).error ?? "Upload failed");
@@ -74,7 +83,7 @@ export function PatientUploadForm({
       const supabase = createClient();
       const { error: uploadError } = await supabase.storage
         .from(process.env.NEXT_PUBLIC_SUPABASE_DOCUMENTS_BUCKET ?? "patient-documents")
-        .uploadToSignedUrl(storagePath, uploadToken, file);
+        .uploadToSignedUrl(storagePath, uploadToken, uploadFile);
       if (uploadError) throw uploadError;
 
       const confirmRes = await fetch(`/api/requests/${token}/confirm-upload`, {
@@ -83,9 +92,9 @@ export function PatientUploadForm({
         body: JSON.stringify({
           requestDocumentId: doc.id,
           storagePath,
-          fileName: file.name,
-          mimeType: file.type,
-          sizeBytes: file.size,
+          fileName: uploadFile.name,
+          mimeType: uploadFile.type,
+          sizeBytes: uploadFile.size,
         }),
       });
       if (!confirmRes.ok) throw new Error((await confirmRes.json()).error ?? "Upload failed");
