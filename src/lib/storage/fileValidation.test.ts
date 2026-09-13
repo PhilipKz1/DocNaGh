@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateFile, MAX_FILE_SIZE_BYTES } from "./fileValidation";
+import { validateFile, extensionForMimeType, MAX_FILE_SIZE_BYTES } from "./fileValidation";
 
 describe("validateFile", () => {
   it("accepts an allowed type within the size limit", () => {
@@ -29,5 +29,15 @@ describe("validateFile", () => {
 
   it("rejects a negative size", () => {
     expect(validateFile({ mimeType: "image/jpeg", sizeBytes: -1 })).not.toBeNull();
+  });
+});
+
+describe("extensionForMimeType", () => {
+  it("derives the storage-key extension from the server-validated mime type, not the client-supplied filename", () => {
+    expect(extensionForMimeType("application/pdf")).toBe("pdf");
+    expect(extensionForMimeType("image/jpeg")).toBe("jpg");
+    expect(extensionForMimeType("image/png")).toBe("png");
+    expect(extensionForMimeType("image/heic")).toBe("heic");
+    expect(extensionForMimeType("image/heif")).toBe("heif");
   });
 });

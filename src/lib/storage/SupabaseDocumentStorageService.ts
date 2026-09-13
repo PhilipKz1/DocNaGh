@@ -5,7 +5,7 @@ import type {
   DocumentStorageService,
   UploadTarget,
 } from "@/lib/storage/DocumentStorageService";
-import { validateFile } from "@/lib/storage/fileValidation";
+import { validateFile, extensionForMimeType, type AllowedMimeType } from "@/lib/storage/fileValidation";
 
 const BUCKET = process.env.SUPABASE_DOCUMENTS_BUCKET ?? "patient-documents";
 const DEFAULT_DOWNLOAD_TTL_SECONDS = Number(process.env.SIGNED_URL_TTL_SECONDS ?? 300);
@@ -27,8 +27,12 @@ export class SupabaseDocumentStorageService implements DocumentStorageService {
     const validationError = validateFile(params);
     if (validationError) throw new Error(validationError);
 
-    const safeName = params.fileName.replace(/[^a-zA-Z0-9.\-_]/g, "_");
-    const storagePath = `${params.clinicId}/${params.requestId}/${randomUUID()}-${safeName}`;
+    // Storage key is a bare UUID + a server-derived extension - no trace of
+    // the client-supplied fileName at all, not even a sanitized version of
+    // it. The original name is preserved separately in documents.file_name
+    // for display and forced-download purposes; it never touches the path.
+    const extension = extensionForMimeType(params.mimeType as AllowedMimeType);
+    const storagePath = `${params.clinicId}/${params.requestId}/${randomUUID()}.${extension}`;
 
     const { data, error } = await this.client.storage
       .from(BUCKET)

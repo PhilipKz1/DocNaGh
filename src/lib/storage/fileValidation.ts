@@ -23,3 +23,21 @@ export function validateFile(file: { mimeType: string; sizeBytes: number }): str
   }
   return null;
 }
+
+const EXTENSIONS_BY_MIME_TYPE: Record<AllowedMimeType, string> = {
+  "application/pdf": "pdf",
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/heic": "heic",
+  "image/heif": "heif",
+};
+
+/**
+ * Server-trusted extension for a storage key, derived from the validated
+ * mimeType - never from the client-supplied filename. Used so the storage
+ * path can be a bare UUID with no trace of the original name, rather than
+ * sanitizing and keeping a version of it.
+ */
+export function extensionForMimeType(mimeType: AllowedMimeType): string {
+  return EXTENSIONS_BY_MIME_TYPE[mimeType];
+}
