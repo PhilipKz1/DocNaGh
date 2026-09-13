@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getRequestByToken } from "@/lib/requestAccess";
 import { getDocumentStorageService } from "@/lib/storage";
-import { validateFile } from "@/lib/storage/fileValidation";
+import { validateFile, MAX_REQUEST_TOTAL_BYTES } from "@/lib/storage/fileValidation";
 
 export async function POST(request: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -32,6 +32,22 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
 
   if (!requestDocument) {
     return NextResponse.json({ error: "Unknown document for this request." }, { status: 400 });
+  }
+
+  // Per-file size is capped above; this catches a request accumulating many
+  // files that each individually pass but add up to unbounded storage.
+  const { data: existingDocs } = await access.supabase
+    .from("documents")
+    .select("size_bytes, request_documents!inner(request_id)")
+    .eq("request_documents.request_id", access.request.id);
+  const totalExistingBytes = (existingDocs ?? []).reduce((sum, d) => sum + d.size_bytes, 0);
+  if (totalExistingBytes + sizeBytes > MAX_REQUEST_TOTAL_BYTES) {
+    return NextResponse.json(
+      {
+        error: `This request has reached its ${MAX_REQUEST_TOTAL_BYTES / (1024 * 1024)} MB total limit across all files. Contact the clinic if more space is needed.`,
+      },
+      { status: 400 }
+    );
   }
 
   const storage = getDocumentStorageService();

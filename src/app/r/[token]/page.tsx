@@ -98,7 +98,8 @@ export default async function PatientRequestPage({
 
         <div className="rounded-lg border border-slate-200 bg-white p-4 text-xs text-slate-500 space-y-1">
           <p>
-            Accepted: PDF, JPG, or PNG, up to {MAX_FILE_SIZE_BYTES / (1024 * 1024)} MB each.
+            Accepted: PDF, JPG, PNG, or HEIC (iPhone photos), up to{" "}
+            {MAX_FILE_SIZE_BYTES / (1024 * 1024)} MB each.
           </p>
           <p>
             Files are encrypted and only visible to {clinicName ?? "the requesting clinic"} -

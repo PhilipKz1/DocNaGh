@@ -15,9 +15,10 @@ const DEFAULT_DOWNLOAD_TTL_SECONDS = Number(process.env.SIGNED_URL_TTL_SECONDS ?
  * (signed upload/download URLs are minted server-side; the object body
  * never passes through our server for uploads).
  *
- * Note: for files well under the 100 MB cap a single signed upload URL is
- * sufficient. If larger files are supported later, switch to Supabase's
- * resumable (TUS) upload endpoint instead of adding a second service.
+ * Note: for files well under the 10 MB cap (see MAX_FILE_SIZE_BYTES) a
+ * single signed upload URL is sufficient. If larger files are supported
+ * later, switch to Supabase's resumable (TUS) upload endpoint instead of
+ * adding a second service.
  */
 export class SupabaseDocumentStorageService implements DocumentStorageService {
   constructor(private readonly client: SupabaseClient) {}

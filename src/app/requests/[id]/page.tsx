@@ -71,7 +71,7 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
         .single(),
       supabase
         .from("request_documents")
-        .select("id, label, notes, status, documents(id, file_name, size_bytes, uploaded_at)")
+        .select("id, label, notes, status, documents(id, file_name, mime_type, size_bytes, uploaded_at)")
         .eq("request_id", id)
         .order("created_at", { ascending: true }),
       supabase
@@ -199,25 +199,38 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                     {STATUS_LABEL[doc.status] ?? doc.status}
                   </span>
                 </div>
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-2">
                   {doc.documents?.map((file) => {
                     const uploadedAt = new Date(file.uploaded_at);
                     const autoDeletesAt = new Date(
                       uploadedAt.getTime() + RETENTION_DAYS * 24 * 60 * 60 * 1000
                     );
+                    const fileType = file.mime_type === "application/pdf" ? "PDF" : "Photo";
                     return (
-                      <div key={file.id} className="flex flex-wrap items-center gap-3">
-                        <DownloadButton documentId={file.id} fileName={file.file_name} />
-                        <DeleteDocumentButton documentId={file.id} />
-                        <span
-                          className="text-xs text-slate-400"
-                          title="Sent by the patient - shown in your local time"
-                        >
-                          Received {uploadedAt.toLocaleString()}
-                        </span>
-                        <span className="text-xs text-slate-400">
-                          Auto-deletes {autoDeletesAt.toLocaleDateString()}
-                        </span>
+                      <div key={file.id} className="rounded-md bg-slate-50 px-3 py-2">
+                        <div className="flex flex-wrap items-center gap-2 text-sm">
+                          <span aria-hidden>{fileType === "PDF" ? "📄" : "🖼️"}</span>
+                          <span className="font-medium text-slate-800">{file.file_name}</span>
+                          <span className="rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[11px] text-slate-500">
+                            {fileType}
+                          </span>
+                          <span className="flex items-center gap-1 text-xs text-emerald-700">
+                            <span aria-hidden>✓</span> Uploaded
+                          </span>
+                        </div>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-3">
+                          <DownloadButton documentId={file.id} fileName={file.file_name} mimeType={file.mime_type} />
+                          <DeleteDocumentButton documentId={file.id} />
+                          <span
+                            className="text-xs text-slate-400"
+                            title="Sent by the patient - shown in your local time"
+                          >
+                            Received {uploadedAt.toLocaleString()}
+                          </span>
+                          <span className="text-xs text-slate-400">
+                            Auto-deletes {autoDeletesAt.toLocaleDateString()}
+                          </span>
+                        </div>
                       </div>
                     );
                   })}

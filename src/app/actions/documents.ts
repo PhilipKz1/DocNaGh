@@ -6,8 +6,15 @@ import { getDocumentStorageService } from "@/lib/storage";
 import { logAuditEvent } from "@/lib/audit";
 import { recomputeRequestStatus } from "@/lib/requestStatus";
 
-/** Verifies the caller's clinic can see this document (via RLS), then mints a signed download URL. */
-export async function getDownloadUrl(documentId: string): Promise<string> {
+/**
+ * Verifies the caller's clinic can see this document (via RLS), then mints
+ * a signed URL. forceDownload=true (the default, used by the "Download"
+ * action) sets Content-Disposition: attachment so the browser saves the
+ * file. Pass false (used by "Preview" on images) to get a URL the browser
+ * renders inline instead - forcing attachment on an image would defeat the
+ * point of previewing it.
+ */
+export async function getDownloadUrl(documentId: string, forceDownload = true): Promise<string> {
   const supabase = await createClient();
 
   const { data: document, error } = await supabase
@@ -19,7 +26,10 @@ export async function getDownloadUrl(documentId: string): Promise<string> {
   if (error || !document) throw new Error("Document not found or access denied");
 
   const storage = getDocumentStorageService();
-  const url = await storage.createDownloadUrl(document.storage_path, document.file_name);
+  const url = await storage.createDownloadUrl(
+    document.storage_path,
+    forceDownload ? document.file_name : undefined
+  );
 
   const { data: requestDoc } = await supabase
     .from("request_documents")

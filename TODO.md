@@ -25,7 +25,7 @@
 
 ## Known gaps (called out in README, not yet built)
 
-- [ ] Resumable/chunked uploads — currently a single signed upload URL per file, fine under the 100MB cap but not truly resumable; revisit with Supabase's TUS endpoint if needed
+- [ ] Resumable/chunked uploads — currently a single signed upload URL per file, fine under the 10MB cap but not truly resumable; revisit with Supabase's TUS endpoint if needed
 - [ ] Patient "missing documents" nudge / reminder flow (spec mentions tracking "which are missing" — status exists in schema but nothing acts on it yet). Highest-priority gap left: nothing currently re-engages a patient who never uploads.
 - [x] Request templates — a clinic can save a request's document checklist and reuse it (`request_templates`/`request_template_documents`, `src/app/actions/templates.ts`, template picker on `/requests/new`).
 

@@ -56,7 +56,7 @@ development.
 ## Known MVP gaps
 
 - File uploads use a single signed upload URL, not chunked/resumable
-  uploads. Fine under the 100 MB cap; revisit with Supabase's resumable
+  uploads. Fine under the 10 MB cap; revisit with Supabase's resumable
   (TUS) endpoint if that limit grows.
 - No retention/deletion job yet - expired requests and their objects are not
   automatically purged.

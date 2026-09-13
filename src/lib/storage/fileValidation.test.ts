@@ -6,6 +6,11 @@ describe("validateFile", () => {
     expect(validateFile({ mimeType: "application/pdf", sizeBytes: 1024 })).toBeNull();
   });
 
+  it("accepts HEIC/HEIF (iPhone camera photos)", () => {
+    expect(validateFile({ mimeType: "image/heic", sizeBytes: 1024 })).toBeNull();
+    expect(validateFile({ mimeType: "image/heif", sizeBytes: 1024 })).toBeNull();
+  });
+
   it("rejects a disallowed mime type", () => {
     expect(validateFile({ mimeType: "application/x-msdownload", sizeBytes: 1024 })?.length).toBeGreaterThan(0);
   });

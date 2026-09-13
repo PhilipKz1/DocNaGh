@@ -231,14 +231,13 @@ export function PatientUploadForm({
                     <path d="M12 16V4M12 4l-4 4M12 4l4 4" strokeLinecap="round" strokeLinejoin="round" />
                     <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" strokeLinecap="round" />
                   </svg>
-                  {busyId === doc.id ? "Uploading…" : "Take photo or choose file"}
+                  {busyId === doc.id ? "Uploading…" : "Add file or photo"}
                   <input
                     ref={(el) => {
                       inputRefs.current[doc.id] = el;
                     }}
                     type="file"
                     accept={ALLOWED_MIME_TYPES.join(",")}
-                    capture="environment"
                     disabled={busyId === doc.id}
                     onChange={(e) => {
                       const file = e.target.files?.[0];
