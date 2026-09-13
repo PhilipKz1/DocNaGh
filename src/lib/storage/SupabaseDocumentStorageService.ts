@@ -44,11 +44,12 @@ export class SupabaseDocumentStorageService implements DocumentStorageService {
 
   async createDownloadUrl(
     storagePath: string,
+    fileName?: string,
     ttlSeconds: number = DEFAULT_DOWNLOAD_TTL_SECONDS
   ): Promise<string> {
     const { data, error } = await this.client.storage
       .from(BUCKET)
-      .createSignedUrl(storagePath, ttlSeconds);
+      .createSignedUrl(storagePath, ttlSeconds, fileName ? { download: fileName } : undefined);
 
     if (error) throw error;
     return data.signedUrl;

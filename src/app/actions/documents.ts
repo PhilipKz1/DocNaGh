@@ -19,7 +19,7 @@ export async function getDownloadUrl(documentId: string): Promise<string> {
   if (error || !document) throw new Error("Document not found or access denied");
 
   const storage = getDocumentStorageService();
-  const url = await storage.createDownloadUrl(document.storage_path);
+  const url = await storage.createDownloadUrl(document.storage_path, document.file_name);
 
   const { data: requestDoc } = await supabase
     .from("request_documents")

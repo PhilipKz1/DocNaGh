@@ -12,8 +12,12 @@ export interface DocumentStorageService {
    */
   createUploadTarget(params: CreateUploadTargetParams): Promise<UploadTarget>;
 
-  /** Mints a time-limited signed URL a provider's browser can fetch/download. */
-  createDownloadUrl(storagePath: string, ttlSeconds?: number): Promise<string>;
+  /**
+   * Mints a time-limited signed URL a provider's browser can fetch/download.
+   * Passing fileName sets Content-Disposition: attachment so the browser
+   * saves the file instead of opening PDFs/images inline in a new tab.
+   */
+  createDownloadUrl(storagePath: string, fileName?: string, ttlSeconds?: number): Promise<string>;
 
   /** Permanently removes an object, e.g. on request expiry/retention cleanup. */
   deleteObject(storagePath: string): Promise<void>;
