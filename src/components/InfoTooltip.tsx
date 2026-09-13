@@ -29,7 +29,7 @@ export function InfoTooltip({ text }: { text: string }) {
       {open && (
         <span
           role="tooltip"
-          className="absolute bottom-full left-1/2 z-20 mb-2 w-56 -translate-x-1/2 rounded-md border border-slate-200 bg-white p-2.5 text-xs leading-relaxed text-slate-600 shadow-lg"
+          className="absolute top-full left-1/2 z-20 mt-2 w-64 -translate-x-1/2 rounded-md border border-slate-200 bg-white p-3 text-xs leading-relaxed text-slate-600 shadow-lg"
         >
           {text}
         </span>
