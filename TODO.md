@@ -15,7 +15,7 @@
 ## Before deploying anywhere real
 
 - [x] **Rotate the Supabase service role key.** Migrated to the new Supabase Secret/Publishable API key system; old legacy `anon`/`service_role` keys deleted from Supabase. `.env.local` and Vercel (Production) env vars updated — `SUPABASE_SERVICE_ROLE_KEY` as Secret, `NEXT_PUBLIC_SUPABASE_ANON_KEY` as Config.
-- [ ] **Fix the Auth redirect allow-list.** Supabase Dashboard → Authentication → URL Configuration → Redirect URLs → add `http://localhost:3000/**` for dev and your real domain (`https://yourdomain.com/**`) once you have one. Without this, invite/recovery emails silently drop users on the homepage instead of `/reset-password`.
+- [x] **Fix the Auth redirect allow-list.** (Confirmed working in production 2026-11-02 — password reset lands on `/reset-password`.) Supabase Dashboard → Authentication → URL Configuration → Redirect URLs → add `http://localhost:3000/**` for dev and your real domain (`https://yourdomain.com/**`) once you have one. Without this, invite/recovery emails silently drop users on the homepage instead of `/reset-password`.
 - [ ] **Set up custom SMTP** (Resend recommended — free tier, good deliverability). Supabase's built-in email sender is testing-only: low rate limits, poor deliverability, no branding. Configure in Supabase Dashboard → Project Settings → Authentication → SMTP Settings once you have a Resend account + verified sending domain.
 - [x] **Buy a domain** — `medswyft.com` registered via Cloudflare, DNS already pointed at Vercel.
 - [ ] Set `RESEND_API_KEY` (and optionally a verified-domain `EMAIL_FROM`) so the provider/patient upload-notification emails (`src/lib/email.ts`) actually send instead of just logging to the console.
