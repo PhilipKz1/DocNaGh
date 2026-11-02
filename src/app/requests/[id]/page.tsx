@@ -55,6 +55,45 @@ const REQUEST_STATUS: Record<string, { label: string; className: string; meaning
   },
 };
 
+const ACTOR_LABEL: Record<string, string> = {
+  provider: "Staff",
+  patient: "Patient",
+  system: "System",
+};
+
+/** Plain-language activity entries instead of raw audit event names. */
+function describeEvent(eventType: string, metadata: Record<string, unknown> | null): string {
+  const fileName = typeof metadata?.fileName === "string" ? metadata.fileName : null;
+  switch (eventType) {
+    case "request_created":
+      return "Request created";
+    case "request_emailed_to_patient":
+      return "Link emailed to the patient";
+    case "consent_given":
+      return "Patient gave consent";
+    case "document_uploaded":
+      return fileName ? `Uploaded ${fileName}` : "Uploaded a document";
+    case "document_removed_by_patient":
+      return "Patient removed an upload";
+    case "document_downloaded":
+      return "Downloaded a document";
+    case "document_deleted_by_provider":
+      return "Deleted a document";
+    case "document_purged":
+      return "Document automatically deleted (retention period ended)";
+    case "additional_documents_requested":
+      return "Asked the patient for more documents";
+    case "expiry_extended":
+      return "Changed the link's expiry";
+    case "request_marked_complete":
+      return "Marked complete";
+    case "request_cancelled":
+      return "Cancelled the request";
+    default:
+      return eventType.replace(/_/g, " ");
+  }
+}
+
 export default async function RequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
@@ -174,12 +213,14 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
             <RequestQrCode link={link} patientName={request.patient_display_name} />
             <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
               <p className="text-xs font-semibold text-slate-700">Link options</p>
-              <ExtendExpiryControl
-                requestId={request.id}
-                createdAt={request.created_at}
-                expiresAt={request.expires_at}
-              />
-              <CancelRequestButton requestId={request.id} />
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+                <ExtendExpiryControl
+                  requestId={request.id}
+                  createdAt={request.created_at}
+                  expiresAt={request.expires_at}
+                />
+                <CancelRequestButton requestId={request.id} />
+              </div>
             </div>
           </div>
         ) : (
@@ -276,7 +317,9 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
               }
               return (
                 <li key={event.id} className="text-slate-500">
-                  {new Date(event.created_at).toLocaleString()} — {event.actor_type}: {event.event_type}
+                  {new Date(event.created_at).toLocaleString()} —{" "}
+                  {ACTOR_LABEL[event.actor_type] ?? event.actor_type}:{" "}
+                  {describeEvent(event.event_type, event.metadata as Record<string, unknown> | null)}
                 </li>
               );
             })}

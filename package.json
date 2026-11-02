@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:e2e:api": "node e2e/api.mjs",
+    "test:e2e:ui": "node e2e/ui.mjs",
+    "test:e2e": "npm run test:e2e:api && npm run test:e2e:ui"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
@@ -25,6 +28,7 @@
     "@types/react-dom": "^18",
     "eslint": "^8",
     "eslint-config-next": "^15.5.25",
+    "playwright": "^1.64.1",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5",

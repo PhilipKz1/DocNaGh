@@ -53,7 +53,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
     requestId: access.request.id,
     actorType: "patient",
     eventType: "document_removed_by_patient",
-    metadata: { requestDocumentId, fileName: document.file_name },
+    metadata: { requestDocumentId, documentId: document.id },
   });
 
   return NextResponse.json({ ok: true, requestStatus: nextStatus });

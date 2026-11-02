@@ -6,6 +6,20 @@ import { getDocumentStorageService } from "@/lib/storage";
 import { logAuditEvent } from "@/lib/audit";
 import { recomputeRequestStatus } from "@/lib/requestStatus";
 
+/** The signed-in provider, for attributing audit events to them and their clinic. */
+async function getCurrentProvider(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data: provider } = await supabase
+    .from("providers")
+    .select("id, clinic_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  return provider;
+}
+
 /**
  * Verifies the caller's clinic can see this document (via RLS), then mints
  * a signed URL. forceDownload=true (the default, used by the "Download"
@@ -37,16 +51,18 @@ export async function getDownloadUrl(documentId: string, forceDownload = true): 
     .eq("id", document.request_document_id)
     .single();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const provider = await getCurrentProvider(supabase);
 
+  // No fileName here: the name lives on the documents row (and its upload
+  // event) and is removed with it - copying it into other events would
+  // keep it around after the document is deleted.
   await logAuditEvent({
     requestId: requestDoc?.request_id ?? null,
+    clinicId: provider?.clinic_id ?? null,
     actorType: "provider",
-    actorId: user?.id ?? null,
+    actorId: provider?.id ?? null,
     eventType: "document_downloaded",
-    metadata: { documentId, fileName: document.file_name },
+    metadata: { documentId },
   });
 
   return url;
@@ -92,16 +108,15 @@ export async function deleteDocument(documentId: string): Promise<{ error: strin
     await recomputeRequestStatus(supabase, requestDoc.request_id);
   }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const provider = await getCurrentProvider(supabase);
 
   await logAuditEvent({
     requestId: requestDoc?.request_id ?? null,
+    clinicId: provider?.clinic_id ?? null,
     actorType: "provider",
-    actorId: user?.id ?? null,
+    actorId: provider?.id ?? null,
     eventType: "document_deleted_by_provider",
-    metadata: { documentId, fileName: document.file_name },
+    metadata: { documentId },
   });
 
   if (requestDoc?.request_id) {

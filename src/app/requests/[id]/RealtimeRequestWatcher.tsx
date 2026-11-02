@@ -24,36 +24,61 @@ export function RealtimeRequestWatcher({ requestId }: { requestId: string }) {
   const router = useRouter();
 
   useEffect(() => {
-    try {
-      const supabase = createClient();
-      const channel = supabase
-        .channel(`request-${requestId}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "audit_events",
-            filter: `request_id=eq.${requestId}`,
-          },
-          () => router.refresh()
-        )
-        .subscribe((status, err) => {
-          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-            console.warn(`[RealtimeRequestWatcher] ${status}`, err);
-          }
-        });
+    let cancelled = false;
+    let cleanup: (() => void) | undefined;
 
-      return () => {
-        try {
-          supabase.removeChannel(channel);
-        } catch (err) {
-          console.warn("[RealtimeRequestWatcher] cleanup failed", err);
-        }
-      };
-    } catch (err) {
-      console.warn("[RealtimeRequestWatcher] setup failed - live updates disabled", err);
-    }
+    (async () => {
+      try {
+        const supabase = createClient();
+        // Realtime evaluates RLS against the token sent when joining the
+        // channel. The publishable key isn't a JWT, so without the user's
+        // own access token the join is anonymous and RLS silently filters
+        // out every event - the page simply never updates.
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (cancelled) return;
+        if (session) await supabase.realtime.setAuth(session.access_token);
+
+        const channel = supabase
+          .channel(`request-${requestId}`)
+          .on(
+            "postgres_changes",
+            {
+              event: "INSERT",
+              schema: "public",
+              table: "audit_events",
+              filter: `request_id=eq.${requestId}`,
+            },
+            () => router.refresh()
+          )
+          .subscribe((status, err) => {
+            // Anything that happened between this page rendering and the
+            // subscription going live would otherwise be missed until the
+            // next event - catch up once now that we're listening.
+            if (status === "SUBSCRIBED") router.refresh();
+            if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+              console.warn(`[RealtimeRequestWatcher] ${status}`, err);
+            }
+          });
+
+        cleanup = () => {
+          try {
+            supabase.removeChannel(channel);
+          } catch (err) {
+            console.warn("[RealtimeRequestWatcher] cleanup failed", err);
+          }
+        };
+        if (cancelled) cleanup();
+      } catch (err) {
+        console.warn("[RealtimeRequestWatcher] setup failed - live updates disabled", err);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      cleanup?.();
+    };
   }, [requestId, router]);
 
   return null;

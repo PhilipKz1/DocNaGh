@@ -159,7 +159,7 @@ async function notifyUploadReceived(params: {
           bodyHtml: `
             <p>Hi ${escapeHtml(patientDisplayName)},</p>
             <p><strong>${escapeHtml(documentLabel)}</strong> was received by ${escapeHtml(clinicName)}. Thank you for sending it over.</p>
-            <p style="margin-top:16px;color:#94a3b8;font-size:12px;">
+            <p style="margin-top:16px;color:#64748b;font-size:12px;">
               This is an automated message and this inbox isn't monitored - please don't reply
               directly. If you have questions, contact ${escapeHtml(clinicName)} directly.
             </p>

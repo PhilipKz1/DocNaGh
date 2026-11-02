@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Typecheck, lint, unit tests, build
+    runs-on: ubuntu-latest
+    env:
+      # Placeholders - the build only needs these to exist, every page is
+      # rendered per request. No real keys are used in this job.
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  e2e:
+    name: End-to-end (API + browser)
+    needs: checks
+    runs-on: ubuntu-latest
+    # Tests create and delete throwaway clinics in the Supabase project the
+    # secrets point at - never let two runs overlap on the same database.
+    concurrency:
+      group: e2e
+      cancel-in-progress: false
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_DOCUMENTS_BUCKET: ${{ vars.SUPABASE_DOCUMENTS_BUCKET || 'patient-documents' }}
+      NEXT_PUBLIC_SUPABASE_DOCUMENTS_BUCKET: ${{ vars.SUPABASE_DOCUMENTS_BUCKET || 'patient-documents' }}
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      SITE: http://localhost:3000
+      # RESEND_API_KEY deliberately unset: notification emails are logged,
+      # not sent, while tests run.
+    steps:
+      - name: Check that Supabase secrets are configured
+        id: gate
+        run: |
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ] || [ -z "$NEXT_PUBLIC_SUPABASE_URL" ]; then
+            echo "::notice::E2E skipped - add NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY as repository secrets to enable it."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.enabled == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.enabled == 'true'
+        with:
+          node-version: 22
+          cache: npm
+      - if: steps.gate.outputs.enabled == 'true'
+        run: npm ci
+      - if: steps.gate.outputs.enabled == 'true'
+        run: npx playwright install --with-deps chromium
+      - if: steps.gate.outputs.enabled == 'true'
+        run: npm run build
+      - name: Start app
+        if: steps.gate.outputs.enabled == 'true'
+        run: |
+          npx next start -p 3000 > server.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:3000/login && exit 0
+            sleep 1
+          done
+          echo "App didn't start"; cat server.log; exit 1
+      - name: API end-to-end tests
+        if: steps.gate.outputs.enabled == 'true'
+        run: npm run test:e2e:api
+      - name: Browser end-to-end tests
+        if: steps.gate.outputs.enabled == 'true'
+        run: npm run test:e2e:ui
+      - name: Upload screenshots and server log
+        if: failure() && steps.gate.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-artifacts
+          path: |
+            e2e-artifacts/
+            server.log
+          retention-days: 7

@@ -40,6 +40,12 @@
 - [x] Patient consent is recorded server-side (`requests.consented_at`/`consent_version`, `consent_given` audit event) and required by `upload-target`.
 - [x] Data return/erasure: clinic ZIP export on `/harbor` before deletion; per-patient export and erasure for clinic admins on the request page.
 
+## Found by end-to-end tests (2026-11-02)
+
+- [ ] **Apply `0010_audit_integrity.sql`** in the Supabase SQL editor (DB-level block on cross-clinic audit writes + scrubs file names from download/delete events). Safe to run before or after deploying the matching code. `e2e/api.mjs` fails its "DB rejects audit event…" check until it's applied.
+- [ ] Live refresh on the request page is occasionally not applied: realtime events do arrive (verified at the websocket level) but when several `router.refresh()` calls overlap - e.g. a realtime-triggered refresh plus AddNoteForm's own refresh - the page can stay stale until reload. Likely fix: debounce/serialize refreshes in `RealtimeRequestWatcher`. The two affected UI checks are soft (WARN) in `e2e/ui.mjs` until fixed.
+- [ ] Add the e2e secrets in GitHub (Settings → Secrets → Actions): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`. Ideally point them at a separate test Supabase project rather than production - the tests create and delete throwaway clinics.
+
 ## Nice-to-haves from the spec
 
 - [x] Patient-facing confirmation (email receipt) after successful upload — `notifyUploadReceived()` in the confirm-upload route; needs `RESEND_API_KEY` set to actually send (see above)

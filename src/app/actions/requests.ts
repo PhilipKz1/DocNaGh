@@ -95,6 +95,7 @@ export async function createRequest(_prevState: { error: string | null }, formDa
   await logAuditEvent({
     requestId: request.id,
     actorType: "provider",
+    clinicId: provider.clinic_id,
     actorId: provider.id,
     eventType: "request_created",
     metadata: { documentCount: labels.length },
@@ -120,7 +121,7 @@ export async function createRequest(_prevState: { error: string | null }, formDa
             <p>Hi ${escapeHtml(patientName)},</p>
             <p>Please use the secure link below to upload:</p>
             <ul style="margin:8px 0 0;padding-left:20px;">${itemsHtml}</ul>
-            <p style="margin-top:16px;color:#94a3b8;font-size:12px;">
+            <p style="margin-top:16px;color:#64748b;font-size:12px;">
               This is an automated message and this inbox isn't monitored - please don't reply
               directly. If you have questions, contact ${escapeHtml(clinicName)} directly.
             </p>
@@ -133,6 +134,7 @@ export async function createRequest(_prevState: { error: string | null }, formDa
       await logAuditEvent({
         requestId: request.id,
         actorType: "provider",
+        clinicId: provider.clinic_id,
         actorId: provider.id,
         eventType: "request_emailed_to_patient",
         metadata: { patientEmail },
@@ -170,6 +172,7 @@ export async function cancelRequest(requestId: string) {
   await logAuditEvent({
     requestId,
     actorType: "provider",
+    clinicId: provider.clinic_id,
     actorId: provider.id,
     eventType: "request_cancelled",
   });
@@ -203,6 +206,7 @@ export async function markRequestComplete(requestId: string) {
   await logAuditEvent({
     requestId,
     actorType: "provider",
+    clinicId: provider.clinic_id,
     actorId: provider.id,
     eventType: "request_marked_complete",
   });
@@ -241,16 +245,21 @@ export async function extendRequestExpiry(requestId: string, newExpiresAt: strin
     return { error: "New expiry must be in the future." };
   }
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("requests")
     .update({ expires_at: new Date(requested).toISOString() })
     .eq("id", requestId)
-    .in("status", ["pending", "partially_received", "under_review"]);
+    .in("status", ["pending", "partially_received", "under_review"])
+    .select("id");
   if (error) return { error: error.message };
+  if (!updated || updated.length === 0) {
+    return { error: "This request is closed - its expiry can no longer be changed." };
+  }
 
   await logAuditEvent({
     requestId,
     actorType: "provider",
+    clinicId: provider.clinic_id,
     actorId: provider.id,
     eventType: "expiry_extended",
     metadata: { newExpiresAt: new Date(requested).toISOString() },
@@ -365,6 +374,7 @@ export async function requestAdditionalDocuments(
   await logAuditEvent({
     requestId,
     actorType: "provider",
+    clinicId: provider.clinic_id,
     actorId: provider.id,
     eventType: "additional_documents_requested",
     metadata: { patientEmail: sendEmailNow ? trimmedEmail : null, newLabels: labels },
@@ -394,9 +404,19 @@ export async function addRequestNote(requestId: string, text: string) {
   if (!trimmed) return { error: "Note can't be empty" };
   if (trimmed.length > 1000) return { error: "Note is too long (max 1000 characters)" };
 
+  // The note is written with the service role (see logAuditEvent), so RLS
+  // isn't checking it - confirm the request belongs to this clinic first.
+  const { data: request } = await supabase
+    .from("requests")
+    .select("id")
+    .eq("id", requestId)
+    .maybeSingle();
+  if (!request) return { error: "Request not found" };
+
   await logAuditEvent({
     requestId,
     actorType: "provider",
+    clinicId: provider.clinic_id,
     actorId: provider.id,
     eventType: "note_added",
     metadata: { text: trimmed, authorName: provider.full_name },
