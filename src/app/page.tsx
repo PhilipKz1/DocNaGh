@@ -242,7 +242,7 @@ export default function Home() {
                   <span className="h-2.5 w-2.5 rounded-full bg-red-300" />
                   <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
                   <span className="h-2.5 w-2.5 rounded-full bg-green-300" />
-                  <span className="ml-3 truncate rounded bg-white px-2 py-0.5 text-[11px] text-slate-400 dark:bg-white/5 dark:text-slate-500">
+                  <span className="ml-3 truncate rounded bg-white px-2 py-0.5 text-[11px] text-slate-500 dark:bg-white/5 dark:text-slate-500">
                     app.example.com/dashboard
                   </span>
                 </div>
@@ -281,7 +281,7 @@ export default function Home() {
                   </ul>
                 </div>
               </div>
-              <p className="mt-3 text-center text-xs text-slate-400 dark:text-slate-500">
+              <p className="mt-3 text-center text-xs text-slate-500 dark:text-slate-500">
                 Provider dashboard — track every request at a glance
               </p>
             </div>
@@ -316,7 +316,7 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              <p className="mt-3 text-center text-xs text-slate-400 dark:text-slate-500">
+              <p className="mt-3 text-center text-xs text-slate-500 dark:text-slate-500">
                 Patient view — confirmation after upload
               </p>
             </div>

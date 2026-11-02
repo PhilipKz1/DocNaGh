@@ -86,6 +86,8 @@ export type Database = {
           status: "pending" | "partially_received" | "under_review" | "complete" | "expired" | "cancelled";
           access_token: string;
           expires_at: string;
+          consented_at: string | null;
+          consent_version: string | null;
           created_at: string;
         };
         Insert: {
@@ -97,6 +99,8 @@ export type Database = {
           status?: "pending" | "partially_received" | "under_review" | "complete" | "expired" | "cancelled";
           access_token?: string;
           expires_at: string;
+          consented_at?: string | null;
+          consent_version?: string | null;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["requests"]["Insert"]>;
@@ -239,6 +243,7 @@ export type Database = {
         Row: {
           id: string;
           request_id: string | null;
+          clinic_id: string | null;
           actor_type: "provider" | "patient" | "system";
           actor_id: string | null;
           event_type: string;
@@ -248,6 +253,7 @@ export type Database = {
         Insert: {
           id?: string;
           request_id?: string | null;
+          clinic_id?: string | null;
           actor_type: "provider" | "patient" | "system";
           actor_id?: string | null;
           event_type: string;

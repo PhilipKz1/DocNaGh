@@ -94,6 +94,9 @@ export function NewRequestForm({ templates }: { templates: Template[] }) {
           <div className="space-y-1">
             <label htmlFor="patientPhone" className="text-sm font-medium">
               Phone
+              <span className="ml-1 font-normal text-slate-500" title="Optional - used only to recognise a returning patient so their past requests show up together">
+                (optional)
+              </span>
             </label>
             <input
               id="patientPhone"
@@ -104,7 +107,7 @@ export function NewRequestForm({ templates }: { templates: Template[] }) {
           <div className="space-y-1">
             <label htmlFor="patientEmail" className="text-sm font-medium">
               Email
-              <span className="ml-1 font-normal text-slate-400" title="Used to email the patient if you need to follow up asking for more documents later">
+              <span className="ml-1 font-normal text-slate-500" title="Used to email the patient if you need to follow up asking for more documents later">
                 (recommended)
               </span>
             </label>
@@ -131,7 +134,7 @@ export function NewRequestForm({ templates }: { templates: Template[] }) {
             />
             Email the patient this link right away
           </label>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500">
             {patientEmail
               ? "Sent as soon as you create the request."
               : "Add an email above to enable this, or skip it and share the QR code, link, or WhatsApp from the request page after creating it."}
@@ -192,7 +195,7 @@ export function NewRequestForm({ templates }: { templates: Template[] }) {
                 <button
                   type="button"
                   onClick={() => setLabels(labels.filter((_, idx) => idx !== i))}
-                  className="rounded px-2 text-sm text-slate-400 hover:text-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-600"
+                  className="rounded px-2 text-sm text-slate-500 hover:text-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-600"
                   aria-label="Remove document"
                 >
                   ✕

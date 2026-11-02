@@ -20,6 +20,9 @@ export function InfoTooltip({ text }: { text: string }) {
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
         onClick={() => setOpen((o) => !o)}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") setOpen(false);
+        }}
         aria-label="More information"
         aria-expanded={open}
         className="grid h-4 w-4 place-items-center rounded-full border border-slate-300 text-[10px] font-semibold text-slate-500 hover:border-teal-500 hover:text-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-600"

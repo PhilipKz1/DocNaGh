@@ -55,13 +55,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
     );
   }
 
-  const { error: insertError } = await access.supabase.from("documents").insert({
-    request_document_id: requestDocumentId,
-    storage_path: storagePath,
-    file_name: fileName,
-    mime_type: mimeType,
-    size_bytes: sizeBytes,
-  });
+  const { data: inserted, error: insertError } = await access.supabase
+    .from("documents")
+    .insert({
+      request_document_id: requestDocumentId,
+      storage_path: storagePath,
+      file_name: fileName,
+      mime_type: mimeType,
+      size_bytes: sizeBytes,
+    })
+    .select("id")
+    .single();
   if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 });
 
   await access.supabase
@@ -71,11 +75,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
 
   const nextStatus = await recomputeRequestStatus(access.supabase, access.request.id);
 
-  await logAuditEvent(access.supabase, {
+  await logAuditEvent({
     requestId: access.request.id,
     actorType: "patient",
     eventType: "document_uploaded",
-    metadata: { fileName, requestDocumentId },
+    metadata: { fileName, requestDocumentId, documentId: inserted.id },
   });
 
   await notifyUploadReceived({

@@ -41,7 +41,7 @@ export function renderBrandedEmail(params: {
       }
     </div>
     <div style="padding:16px 24px;background:#f8fafc;border-top:1px solid #e2e8f0;">
-      <p style="margin:0;font-size:12px;color:#94a3b8;">This message was sent by MedSwyft on behalf of your healthcare provider.</p>
+      <p style="margin:0;font-size:12px;color:#64748b;">This is a one-off service message about a document request, sent by MedSwyft on behalf of your healthcare provider. We don't send marketing email. Questions or data requests: <a href="mailto:info@medswyft.com" style="color:#0f766e;">info@medswyft.com</a>.</p>
     </div>
   </div>
 </div>`.trim();

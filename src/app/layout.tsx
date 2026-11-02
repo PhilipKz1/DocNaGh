@@ -15,8 +15,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Healthcare Document Exchange",
-  description: "Provider-initiated healthcare document requests",
+  title: "MedSwyft",
+  description: "Secure document requests between clinics in Ghana and their patients",
 };
 
 /**

@@ -41,7 +41,7 @@ export async function getDownloadUrl(documentId: string, forceDownload = true): 
     data: { user },
   } = await supabase.auth.getUser();
 
-  await logAuditEvent(supabase, {
+  await logAuditEvent({
     requestId: requestDoc?.request_id ?? null,
     actorType: "provider",
     actorId: user?.id ?? null,
@@ -96,7 +96,7 @@ export async function deleteDocument(documentId: string): Promise<{ error: strin
     data: { user },
   } = await supabase.auth.getUser();
 
-  await logAuditEvent(supabase, {
+  await logAuditEvent({
     requestId: requestDoc?.request_id ?? null,
     actorType: "provider",
     actorId: user?.id ?? null,

@@ -10,6 +10,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
     return NextResponse.json({ error: "This link is invalid or has expired." }, { status: 404 });
   }
 
+  if (!access.request.consented_at) {
+    return NextResponse.json(
+      { error: "Please confirm your consent before uploading." },
+      { status: 403 }
+    );
+  }
+
   const body = await request.json();
   const { requestDocumentId, fileName, mimeType, sizeBytes } = body as {
     requestDocumentId: string;

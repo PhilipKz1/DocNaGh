@@ -92,7 +92,7 @@ export async function createRequest(_prevState: { error: string | null }, formDa
 
   if (docsError) return { error: docsError.message };
 
-  await logAuditEvent(supabase, {
+  await logAuditEvent({
     requestId: request.id,
     actorType: "provider",
     actorId: provider.id,
@@ -130,7 +130,7 @@ export async function createRequest(_prevState: { error: string | null }, formDa
           ctaUrl: link,
         }),
       });
-      await logAuditEvent(supabase, {
+      await logAuditEvent({
         requestId: request.id,
         actorType: "provider",
         actorId: provider.id,
@@ -167,7 +167,7 @@ export async function cancelRequest(requestId: string) {
 
   if (error || !request) return { error: "Unable to cancel this request." };
 
-  await logAuditEvent(supabase, {
+  await logAuditEvent({
     requestId,
     actorType: "provider",
     actorId: provider.id,
@@ -200,7 +200,7 @@ export async function markRequestComplete(requestId: string) {
 
   if (error || !request) return { error: "Unable to mark this request complete." };
 
-  await logAuditEvent(supabase, {
+  await logAuditEvent({
     requestId,
     actorType: "provider",
     actorId: provider.id,
@@ -248,7 +248,7 @@ export async function extendRequestExpiry(requestId: string, newExpiresAt: strin
     .in("status", ["pending", "partially_received", "under_review"]);
   if (error) return { error: error.message };
 
-  await logAuditEvent(supabase, {
+  await logAuditEvent({
     requestId,
     actorType: "provider",
     actorId: provider.id,
@@ -362,7 +362,7 @@ export async function requestAdditionalDocuments(
     });
   }
 
-  await logAuditEvent(supabase, {
+  await logAuditEvent({
     requestId,
     actorType: "provider",
     actorId: provider.id,
@@ -394,7 +394,7 @@ export async function addRequestNote(requestId: string, text: string) {
   if (!trimmed) return { error: "Note can't be empty" };
   if (trimmed.length > 1000) return { error: "Note is too long (max 1000 characters)" };
 
-  await logAuditEvent(supabase, {
+  await logAuditEvent({
     requestId,
     actorType: "provider",
     actorId: provider.id,

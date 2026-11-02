@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ALLOWED_MIME_TYPES, validateFile } from "@/lib/storage/fileValidation";
 import { stripImageMetadata } from "@/lib/stripImageMetadata";
@@ -16,10 +16,12 @@ export function PatientUploadForm({
   token,
   initialDocuments,
   clinicName,
+  initialConsented,
 }: {
   token: string;
   initialDocuments: RequestDocument[];
   clinicName: string;
+  initialConsented: boolean;
 }) {
   const [documents, setDocuments] = useState(initialDocuments);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -27,23 +29,23 @@ export function PatientUploadForm({
   const [confirmingRemoveId, setConfirmingRemoveId] = useState<string | null>(null);
   // Ghana's Data Protection Act, 2012 classifies health status as "special
   // personal data" requiring explicit consent to process - this gate is
-  // that consent, not just a UX nicety. Persisted in sessionStorage so it
-  // doesn't re-prompt on every page refresh within the same visit, but
-  // does reset for a genuinely new visit.
-  const [consented, setConsented] = useState(false);
-  useEffect(() => {
+  // that consent, not just a UX nicety. Recorded server-side per request
+  // (and required by upload-target), so the clinic has evidence of it and
+  // the patient isn't re-asked on a later visit to the same link.
+  const [consented, setConsented] = useState(initialConsented);
+  const [consentPending, setConsentPending] = useState(false);
+  const [consentError, setConsentError] = useState<string | null>(null);
+  async function grantConsent() {
+    setConsentPending(true);
+    setConsentError(null);
     try {
-      setConsented(sessionStorage.getItem(`consent:${token}`) === "true");
-    } catch {
-      // Private browsing / storage blocked - just ask again, harmless.
-    }
-  }, [token]);
-  function grantConsent() {
-    setConsented(true);
-    try {
-      sessionStorage.setItem(`consent:${token}`, "true");
-    } catch {
-      // Nothing to persist to - consent still holds for this page view.
+      const res = await fetch(`/api/requests/${token}/consent`, { method: "POST" });
+      if (!res.ok) throw new Error((await res.json()).error ?? "Something went wrong");
+      setConsented(true);
+    } catch (err) {
+      setConsentError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setConsentPending(false);
     }
   }
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -152,14 +154,24 @@ export function PatientUploadForm({
           <li>
             You can remove anything you upload by mistake, any time before it&apos;s auto-deleted.
           </li>
+          <li>
+            If the patient is under 18, a parent or guardian should give this consent and upload
+            on their behalf.
+          </li>
         </ul>
         <button
           type="button"
           onClick={grantConsent}
-          className="w-full rounded-md bg-teal-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+          disabled={consentPending}
+          className="w-full rounded-md bg-teal-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 disabled:opacity-50"
         >
-          I understand, continue
+          {consentPending ? "Saving…" : "I agree, continue"}
         </button>
+        {consentError && (
+          <p role="alert" className="text-xs text-red-600">
+            {consentError}
+          </p>
+        )}
       </div>
     );
   }
@@ -225,7 +237,7 @@ export function PatientUploadForm({
                 <label
                   className={`flex items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-3 text-sm font-medium transition ${
                     busyId === doc.id
-                      ? "border-slate-200 text-slate-400"
+                      ? "border-slate-200 text-slate-500"
                       : "cursor-pointer border-teal-300 text-teal-700 hover:border-teal-500 hover:bg-teal-50"
                   }`}
                 >

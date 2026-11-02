@@ -49,7 +49,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
 
   const nextStatus = await recomputeRequestStatus(access.supabase, access.request.id);
 
-  await logAuditEvent(access.supabase, {
+  await logAuditEvent({
     requestId: access.request.id,
     actorType: "patient",
     eventType: "document_removed_by_patient",

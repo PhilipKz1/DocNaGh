@@ -15,7 +15,7 @@ export function DeleteClinicButton({
 
   function handleDelete() {
     const confirmed = window.confirm(
-      `Delete "${clinicName}" and everything under it - staff accounts, patients, requests, and uploaded documents? This can't be undone.`
+      `Delete "${clinicName}" and everything under it - staff accounts, patients, requests, and uploaded documents? Use "Export data" first if the clinic needs its data returned. This can't be undone.`
     );
     if (!confirmed) return;
 

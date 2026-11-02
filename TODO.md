@@ -6,6 +6,7 @@
 - [x] Run `supabase/migrations/0001_init.sql` against it
 - [x] Copy `.env.local.example` to `.env.local` and fill in real project URL / anon key / service role key
 - [x] Apply `0002_admin.sql`, `0003_retention.sql`, `0004_document_deletion.sql`
+- [ ] Apply `0009_compliance.sql` (`npx supabase db push`) — must ship together with the matching app deploy: the new code writes `audit_events.clinic_id` and `requests.consented_at`, which don't exist until it runs
 - [x] Bootstrap the first platform admin (`p.kellllly@gmail.com`, via `/admin`)
 - [x] Smoke test: login → create request → `/r/[token]` → upload → shows up in dashboard
 - [ ] Regenerate `src/lib/supabase/database.types.ts` from the real project instead of the hand-written placeholder:
@@ -34,7 +35,10 @@
 - [x] File content now verified against magic-number signatures (`src/lib/storage/fileSignature.ts`), not just the client-reported mimeType — a mislabeled/renamed file is rejected and deleted at confirm-upload time.
 - [x] ~~Next.js 2 major versions behind with 5 high-severity CVEs~~ — stale; the app is already on Next 15.5.25. Current `npm audit` (checked 2026-09-12) shows only 3 findings: 1 high in `js-yaml` (dev-only, pulled in by ESLint, never runs in production) and 1 high + 1 moderate in `postcss`'s CSS source-map handling, which only matters if an attacker controls CSS input to the build — not applicable here. Routine dependency hygiene, not an urgent fix.
 - [ ] No rate limiting on the patient-facing token endpoints (`/r/[token]`, `/api/requests/[token]/*`). The token itself is 256 bits of entropy (effectively unguessable), so this is defense-in-depth rather than the primary control, but there's currently no protection against scripted abuse of a single known/leaked token either. Left out because in-memory rate limiting doesn't work reliably on serverless (stateless, multi-instance) — would need Upstash/Redis or similar if this becomes a real deployment target.
-- [ ] `audit_events.metadata` stores the original `file_name` for `document_uploaded` indefinitely, even after the document itself is deleted/purged (retention only removes the `documents` row + storage object, not the audit trail). Fine for now since it's provider-only readable and filenames are rarely identifying on their own, but worth revisiting if audit retention needs its own policy later.
+- [x] ~~`audit_events.metadata` kept original file names forever~~ — a `documents` delete trigger (`0009_compliance.sql`) now scrubs `fileName` from the matching `document_uploaded` event, and existing events for already-deleted documents were backfilled.
+- [x] Audit trail was readable across clinics (null-`request_id` events like `teammate_invited` matched every provider's select policy) and providers could insert entries directly. Fixed in `0009_compliance.sql`: `audit_events.clinic_id` + clinic-scoped select, no insert policy (server writes via service role in `src/lib/audit.ts`).
+- [x] Patient consent is recorded server-side (`requests.consented_at`/`consent_version`, `consent_given` audit event) and required by `upload-target`.
+- [x] Data return/erasure: clinic ZIP export on `/harbor` before deletion; per-patient export and erasure for clinic admins on the request page.
 
 ## Nice-to-haves from the spec
 

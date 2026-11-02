@@ -18,7 +18,7 @@ export default function PrivacyPage() {
         </div>
 
         <h1 className="text-2xl font-semibold">Privacy Policy</h1>
-        <p className="text-sm text-slate-500">Last updated: {new Date().toLocaleDateString()}</p>
+        <p className="text-sm text-slate-500">Last updated: 2 November 2026</p>
 
         <div className="space-y-5 text-sm leading-relaxed text-slate-700">
           <section>
@@ -26,9 +26,11 @@ export default function PrivacyPage() {
             <p className="mt-1">
               To operate a document request, we collect: a patient&apos;s name and, if provided,
               phone number and email; the documents a patient uploads in response to a request;
-              and account details for clinic staff (name, email, role). Every action on a request
-              — creation, upload, download, deletion — is logged with a timestamp for audit
-              purposes.
+              and account details for clinic staff (name, email, role). When a patient agrees to
+              the consent step, we record when they agreed and which version of the wording they
+              saw. Every action on a request — creation, consent, upload, download, deletion — is
+              logged with a timestamp for audit purposes. We don&apos;t collect anything else: no
+              location, no device tracking, no analytics.
             </p>
           </section>
 
@@ -41,6 +43,16 @@ export default function PrivacyPage() {
               before it can be processed. That&apos;s why the patient upload page requires an
               explicit consent step before any file can be uploaded, rather than treating a click
               on the link as consent by itself.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="font-semibold text-slate-900">Children</h2>
+            <p className="mt-1">
+              Under Ghana&apos;s Data Protection Act, 2012, a child&apos;s personal data can only be
+              processed with the consent of a parent or guardian. If a document request is for a
+              patient under 18, a parent or guardian should open the link, give consent, and
+              upload the documents on the child&apos;s behalf.
             </p>
           </section>
 
@@ -148,21 +160,36 @@ export default function PrivacyPage() {
               collected for. That purpose here is supporting a patient&apos;s ongoing care, not just
               a one-off hand-off, which is why the window is a year rather than days. Account and
               audit-log records are kept only as long as needed to operate the service and meet
-              legal obligations.
+              legal obligations; when a document is deleted, its original file name is also
+              removed from the audit log.
             </p>
           </section>
 
           <section>
-            <h2 className="font-semibold text-slate-900">Your rights</h2>
+            <h2 className="font-semibold text-slate-900">Your rights, and how to ask for deletion</h2>
             <p className="mt-1">
               Under the Data Protection Act, 2012, you can ask to see what data we hold about you,
               ask us to correct it, or ask us to delete it where we&apos;re not required to keep it.
-              Contact your clinic directly, or reach us at{" "}
-              <a href="mailto:info@medswyft.com" className="text-teal-700 hover:underline">
-                info@medswyft.com
-              </a>
-              .
             </p>
+            <ul className="mt-2 list-disc space-y-1.5 pl-5">
+              <li>
+                <strong>Patients:</strong> ask the clinic that sent you the link. Clinic
+                administrators can download a copy of everything held about you, or permanently
+                delete it, directly in MedSwyft. You can also remove any file you uploaded
+                yourself from the upload page while the link is still open.
+              </li>
+              <li>
+                <strong>Clinic staff:</strong> ask your clinic administrator, or contact us.
+              </li>
+              <li>
+                Or email us at{" "}
+                <a href="mailto:info@medswyft.com?subject=Data%20request" className="text-teal-700 hover:underline">
+                  info@medswyft.com
+                </a>{" "}
+                with &quot;Data request&quot; in the subject. We&apos;ll confirm we received it and,
+                since your clinic is the data controller, pass it to them so they can act on it.
+              </li>
+            </ul>
           </section>
 
           <section>
@@ -172,6 +199,15 @@ export default function PrivacyPage() {
               patients&apos; data, and every patient upload link is a unique, expiring, single-purpose
               token rather than a password. If a security incident affecting your data ever
               occurs, we will notify affected clinics without undue delay.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="font-semibold text-slate-900">Changes to this policy</h2>
+            <p className="mt-1">
+              If we change this policy in a way that affects how your data is handled, we&apos;ll
+              update the date at the top and tell clinic administrators by email before the change
+              takes effect.
             </p>
           </section>
 

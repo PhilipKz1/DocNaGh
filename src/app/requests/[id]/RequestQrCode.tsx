@@ -22,7 +22,15 @@ export function RequestQrCode({ link, patientName }: { link: string; patientName
   return (
     <div className="flex flex-col items-center gap-4 rounded-lg border border-slate-200 bg-white p-5 sm:flex-row">
       <div className="rounded-md border border-slate-200 bg-white p-3">
-        <QRCodeSVG value={link} size={176} bgColor="#ffffff" fgColor="#0f172a" level="M" />
+        <QRCodeSVG
+          value={link}
+          size={176}
+          bgColor="#ffffff"
+          fgColor="#0f172a"
+          level="M"
+          role="img"
+          aria-label={`QR code for ${patientName}'s upload link`}
+        />
       </div>
       <div className="w-full space-y-2 text-center sm:text-left">
         <p className="text-sm font-medium text-slate-700">

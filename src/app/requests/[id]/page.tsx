@@ -13,6 +13,8 @@ import { RealtimeRequestWatcher } from "./RealtimeRequestWatcher";
 import { getAppUrl } from "@/lib/appUrl";
 import { InfoTooltip } from "@/components/InfoTooltip";
 import { AddNoteForm } from "./AddNoteForm";
+import { PatientDataControls } from "./PatientDataControls";
+import { requireProvider } from "@/lib/adminAuth";
 
 const STATUS_LABEL: Record<string, string> = {
   requested: "Requested",
@@ -56,6 +58,7 @@ const REQUEST_STATUS: Record<string, { label: string; className: string; meaning
 export default async function RequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
+  const { provider } = await requireProvider();
 
   // Fired together instead of one after another - none of these depend on
   // each other's results, so awaiting them sequentially was pure added
@@ -222,12 +225,12 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                           <DownloadButton documentId={file.id} fileName={file.file_name} mimeType={file.mime_type} />
                           <DeleteDocumentButton documentId={file.id} />
                           <span
-                            className="text-xs text-slate-400"
+                            className="text-xs text-slate-500"
                             title="Sent by the patient - shown in your local time"
                           >
                             Received {uploadedAt.toLocaleString()}
                           </span>
-                          <span className="text-xs text-slate-400">
+                          <span className="text-xs text-slate-500">
                             Auto-deletes {autoDeletesAt.toLocaleDateString()}
                           </span>
                         </div>
@@ -241,6 +244,13 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
         </div>
 
         <RequestMoreDocumentsForm requestId={request.id} defaultEmail={request.patients?.email ?? ""} />
+
+        {provider.role === "admin" && request.patient_id && (
+          <PatientDataControls
+            patientId={request.patient_id}
+            patientName={request.patient_display_name}
+          />
+        )}
 
         <div className="space-y-3">
           <div className="flex items-center gap-1.5">

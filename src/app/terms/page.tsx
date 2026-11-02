@@ -16,7 +16,7 @@ export default function TermsPage() {
         </div>
 
         <h1 className="text-2xl font-semibold">Terms of Use</h1>
-        <p className="text-sm text-slate-500">Last updated: {new Date().toLocaleDateString()}</p>
+        <p className="text-sm text-slate-500">Last updated: 2 November 2026</p>
 
         <div className="space-y-5 text-sm leading-relaxed text-slate-700">
           <section>
@@ -60,6 +60,14 @@ export default function TermsPage() {
             </p>
           </section>
           <section>
+            <h2 className="font-semibold text-slate-900">Fees</h2>
+            <p className="mt-1">
+              Patients are never charged for using an upload link. Any fees for a clinic are agreed
+              with that clinic in writing before onboarding - there are no charges beyond what was
+              agreed.
+            </p>
+          </section>
+          <section>
             <h2 className="font-semibold text-slate-900">Availability</h2>
             <p className="mt-1">
               We aim to keep the service available but don&apos;t guarantee uninterrupted uptime.
@@ -69,8 +77,19 @@ export default function TermsPage() {
           <section>
             <h2 className="font-semibold text-slate-900">Changes</h2>
             <p className="mt-1">
-              We may update these terms as the product evolves. Continued use after a change means
-              you accept the updated terms.
+              We may update these terms as the product evolves. We&apos;ll update the date at the
+              top and email clinic administrators about any significant change before it takes
+              effect. Continued use after that means you accept the updated terms.
+            </p>
+          </section>
+          <section>
+            <h2 className="font-semibold text-slate-900">Governing law and contact</h2>
+            <p className="mt-1">
+              These terms are governed by the laws of Ghana. Questions about them:{" "}
+              <a href="mailto:info@medswyft.com" className="text-teal-700 hover:underline">
+                info@medswyft.com
+              </a>
+              .
             </p>
           </section>
         </div>

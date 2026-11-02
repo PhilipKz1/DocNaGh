@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requirePlatformAdmin } from "@/lib/adminAuth";
 import { createServiceRoleClient } from "@/lib/supabase/server";
-import { getDocumentStorageService } from "@/lib/storage";
+import { deleteRequestsWithFiles } from "@/lib/dataExport";
 import { getAppUrl } from "@/lib/appUrl";
 
 /**
@@ -73,14 +73,13 @@ export async function createClinic(_prevState: { error: string | null }, formDat
  * Deletion order matters here - requests.provider_id is ON DELETE RESTRICT,
  * so requests must be gone before providers (and the clinic row itself,
  * which cascades to providers) can be deleted, or Postgres rejects it.
- * Storage objects have no DB-level cascade at all, so they're removed
- * explicitly before their rows disappear.
+ * The UI offers a full export (/api/harbor/clinics/[clinicId]/export)
+ * first, so the clinic's data can be returned before it's destroyed.
  */
 export async function deleteClinic(clinicId: string) {
   await requirePlatformAdmin();
 
   const supabase = createServiceRoleClient();
-  const storage = getDocumentStorageService();
 
   const { data: clinic } = await supabase
     .from("clinics")
@@ -93,40 +92,16 @@ export async function deleteClinic(clinicId: string) {
     .from("requests")
     .select("id")
     .eq("clinic_id", clinicId);
-  const requestIds = (requestRows ?? []).map((r) => r.id);
 
-  let storagePaths: string[] = [];
-  if (requestIds.length > 0) {
-    const { data: reqDocRows } = await supabase
-      .from("request_documents")
-      .select("id")
-      .in("request_id", requestIds);
-    const reqDocIds = (reqDocRows ?? []).map((rd) => rd.id);
-
-    if (reqDocIds.length > 0) {
-      const { data: docRows } = await supabase
-        .from("documents")
-        .select("storage_path")
-        .in("request_document_id", reqDocIds);
-      storagePaths = (docRows ?? []).map((d) => d.storage_path);
-    }
+  try {
+    await deleteRequestsWithFiles(
+      supabase,
+      (requestRows ?? []).map((r) => r.id)
+    );
+  } catch (err) {
+    console.error(`[deleteClinic] failed to delete requests for ${clinicId}`, err);
+    return { error: "Failed to delete the clinic's requests and files" };
   }
-
-  for (const path of storagePaths) {
-    try {
-      await storage.deleteObject(path);
-    } catch (err) {
-      // Object may already be gone - don't let that block the rest.
-      console.error(`[deleteClinic] failed to delete storage object ${path}`, err);
-    }
-  }
-
-  // Cascades request_documents and documents rows in the DB.
-  const { error: requestsError } = await supabase
-    .from("requests")
-    .delete()
-    .eq("clinic_id", clinicId);
-  if (requestsError) return { error: requestsError.message };
 
   const { data: providerRows } = await supabase
     .from("providers")

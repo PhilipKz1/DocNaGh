@@ -53,7 +53,7 @@ export async function purgeExpiredDocuments() {
       continue;
     }
 
-    await logAuditEvent(supabase, {
+    await logAuditEvent({
       requestId: doc.request_documents?.request_id ?? null,
       actorType: "system",
       eventType: "document_purged",

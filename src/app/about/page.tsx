@@ -22,7 +22,7 @@ export default function AboutPage() {
           </p>
           <p>
             We&apos;re a small team building this specifically for the realities of running a
-            clinic here - unreliable connectivity, patients without smartphones&apos; worth of data to
+            clinic here - unreliable connectivity, patients with little mobile data to
             spare, staff who need something that works the first time without training.
           </p>
 

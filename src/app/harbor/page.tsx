@@ -39,6 +39,12 @@ export default async function AdminPage() {
                 </div>
                 <div className="flex items-center gap-4">
                   <ResendInviteButton clinicId={clinic.id} />
+                  <a
+                    href={`/api/harbor/clinics/${clinic.id}/export`}
+                    className="rounded text-xs font-medium text-teal-700 underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-600 dark:text-teal-400"
+                  >
+                    Export data
+                  </a>
                   <DeleteClinicButton clinicId={clinic.id} clinicName={clinic.name} />
                 </div>
               </li>

@@ -7,7 +7,7 @@ import { logAuditEvent } from "@/lib/audit";
 import { getAppUrl } from "@/lib/appUrl";
 
 export async function inviteProvider(_prevState: { error: string | null }, formData: FormData) {
-  const { supabase, provider: admin } = await requireClinicAdmin();
+  const { provider: admin } = await requireClinicAdmin();
 
   const fullName = String(formData.get("fullName") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
@@ -45,8 +45,9 @@ export async function inviteProvider(_prevState: { error: string | null }, formD
   });
   if (providerError) return { error: providerError.message };
 
-  await logAuditEvent(supabase, {
+  await logAuditEvent({
     actorType: "provider",
+    clinicId: admin.clinic_id,
     actorId: admin.id,
     eventType: "teammate_invited",
     metadata: { email, role },
@@ -109,8 +110,9 @@ export async function removeProvider(providerId: string) {
 
   if (error) return { error: error.message };
 
-  await logAuditEvent(supabase, {
+  await logAuditEvent({
     actorType: "provider",
+    clinicId: admin.clinic_id,
     actorId: admin.id,
     eventType: "teammate_removed",
     metadata: { removedProviderId: providerId },

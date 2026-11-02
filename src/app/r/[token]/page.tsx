@@ -5,7 +5,7 @@ import { PatientUploadForm } from "./PatientUploadForm";
 
 function BrandMark() {
   return (
-    <div className="flex items-center justify-center gap-2 text-xs font-medium text-slate-400">
+    <div className="flex items-center justify-center gap-2 text-xs font-medium text-slate-500">
       <span className="grid h-5 w-5 place-items-center rounded bg-teal-600 text-white">
         <svg viewBox="0 0 24 24" fill="none" strokeWidth="2.5" stroke="currentColor" className="h-3 w-3">
           <path d="M12 3.5 5 6v5.5c0 4.6 3 7.9 7 9 4-1.1 7-4.4 7-9V6l-7-2.5Z" strokeLinejoin="round" />
@@ -112,6 +112,7 @@ export default async function PatientRequestPage({
           token={token}
           initialDocuments={requestDocuments ?? []}
           clinicName={clinicName ?? "the requesting clinic"}
+          initialConsented={Boolean(access.request.consented_at)}
         />
       </div>
     </div>
@@ -134,7 +135,7 @@ function Message({
         <div className="space-y-2">
           <h1 className="text-lg font-semibold text-slate-900">{title}</h1>
           <p className="text-sm text-slate-500">{children}</p>
-          {clinicName && <p className="text-xs text-slate-400">Requesting clinic: {clinicName}</p>}
+          {clinicName && <p className="text-xs text-slate-500">Requesting clinic: {clinicName}</p>}
         </div>
       </div>
     </div>

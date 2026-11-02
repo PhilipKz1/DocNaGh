@@ -74,7 +74,7 @@ export function ExtendExpiryControl({
           onChange={(e) => setDate(e.target.value)}
           className="rounded-md border border-slate-300 px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-600"
         />
-        <p className="text-xs text-slate-400">Max {toDateInputValue(maxDate)} ({MAX_LIFETIME_DAYS} days from creation)</p>
+        <p className="text-xs text-slate-500">Max {toDateInputValue(maxDate)} ({MAX_LIFETIME_DAYS} days from creation)</p>
       </div>
       <button
         type="submit"

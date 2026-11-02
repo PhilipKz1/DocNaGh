@@ -118,7 +118,7 @@ export function RequestMoreDocumentsForm({
               <button
                 type="button"
                 onClick={() => setLabels((ls) => ls.filter((_, idx) => idx !== i))}
-                className="rounded px-2 text-sm text-slate-400 hover:text-red-600"
+                className="rounded px-2 text-sm text-slate-500 hover:text-red-600"
                 aria-label="Remove"
               >
                 ✕
@@ -169,7 +169,7 @@ export function RequestMoreDocumentsForm({
           />
           Email this now
         </label>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-slate-500">
           Either way, you&apos;ll get a &quot;Share via WhatsApp&quot; option after saving.
         </p>
       </div>
